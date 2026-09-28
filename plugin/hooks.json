@@ -1,0 +1,11 @@
+{
+  "forge-agentlens": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "forge-agent-lens-for-google-antigravity",
+        "timeout": 60
+      }
+    ]
+  }
+}

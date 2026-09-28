@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: 0.11.21
+
+jobs:
+  quality:
+    name: Quality, coverage, and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out integration
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: forge-agent-lens-for-google-antigravity
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: forge-agent-lens-for-google-antigravity/uv.lock
+
+      - name: Install locked dependencies
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: uv sync --locked --group test
+
+      - name: Check formatting and lint
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: |
+          uv run --no-sync ruff format --check .
+          uv run --no-sync ruff check .
+
+      - name: Check types
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: uv run --no-sync mypy
+
+      - name: Check REUSE licensing
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint
+
+      - name: Audit source, dependencies, and workflows
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: |
+          uvx --from bandit==1.8.6 bandit -q -r src examples
+          AUDIT_SITE_PACKAGES="$(uv run --no-sync python -c 'import site; print(site.getsitepackages()[0])')"
+          uvx --from pip-audit==2.9.0 pip-audit --path "$AUDIT_SITE_PACKAGES" --skip-editable --progress-spinner off
+          uvx --from zizmor==1.30.1 zizmor --pedantic .
+
+      - name: Run tests with branch coverage
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: |
+          uv run --no-sync coverage erase
+          uv run --no-sync coverage run -m pytest
+          uv run --no-sync coverage report
+
+      - name: Build Python distributions
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: |
+          uv build
+          uvx --from twine==7.0.0 twine check dist/*
+
+      - name: Smoke test built wheel
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: |
+          uv venv --python 3.13 .package-venv
+          uv pip install --python .package-venv/bin/python --no-deps dist/*.whl
+          test "$(printf '{}' | .package-venv/bin/forge-agent-lens-for-google-antigravity)" = '{"decision":"allow"}'
+
+  compatibility:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.14"]
+    steps:
+      - name: Check out integration
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: forge-agent-lens-for-google-antigravity
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: forge-agent-lens-for-google-antigravity/uv.lock
+
+      - name: Install locked dependencies
+        working-directory: forge-agent-lens-for-google-antigravity
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: uv sync --locked --group test --python "$PYTHON_VERSION"
+
+      - name: Run tests
+        working-directory: forge-agent-lens-for-google-antigravity
+        run: uv run --no-sync pytest

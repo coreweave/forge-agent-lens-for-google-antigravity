@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "forge-agent-lens-for-google-antigravity"
+version = "0.1.0"
+description = "CoreWeave Forge Agent Lens tracing for Google Antigravity"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+  { name = "CoreWeave" },
+]
+dependencies = [
+  "coreweave==0.1.0b0",
+]
+
+[project.urls]
+Homepage = "https://github.com/coreweave/forge-agent-lens-for-google-antigravity"
+Issues = "https://github.com/coreweave/forge-agent-lens-for-google-antigravity/issues"
+Repository = "https://github.com/coreweave/forge-agent-lens-for-google-antigravity"
+
+[project.scripts]
+forge-agent-lens-for-google-antigravity = "forge_antigravity.hook:main"
+
+[dependency-groups]
+test = [
+  "coverage[toml]>=7.10,<8",
+  "mypy>=1.17,<2",
+  "pytest>=9.0.3,<10",
+  "ruff==0.15.14",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/forge_antigravity"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-config", "--strict-markers"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+branch = true
+source = ["forge_antigravity"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = true
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src", "examples"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

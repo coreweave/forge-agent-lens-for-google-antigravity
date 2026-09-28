@@ -1,0 +1,9 @@
+{"step_index":0,"source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"2026-01-02T12:00:00Z","content":"<USER_REQUEST>\nRun the greeting command.\n</USER_REQUEST>\n<ADDITIONAL_METADATA>private editor state</ADDITIONAL_METADATA>"}
+{"step_index":1,"source":"SYSTEM","type":"CONVERSATION_HISTORY","status":"DONE","created_at":"2026-01-02T12:00:00.100000Z","content":"history"}
+{"step_index":2,"source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"2026-01-02T12:00:02Z","thinking":"I should run the requested command.","tool_calls":[{"name":"run_command","args":{"CommandLine":"\"printf hello\"","Cwd":"\"/workspace/demo\""}}]}
+{"step_index":3,"source":"MODEL","type":"RUN_COMMAND","status":"DONE","created_at":"2026-01-02T12:00:02.500000Z","content":"hello"}
+{"step_index":4,"source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"2026-01-02T12:00:04Z","content":"Done — the command printed hello."}
+{"step_index":5,"source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"2026-01-02T12:01:00Z","content":"Ask a reviewer to inspect the tests."}
+{"step_index":6,"source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"2026-01-02T12:01:01Z","tool_calls":[{"name":"invoke_subagent","args":{"Subagents":"[{\"Prompt\":\"Inspect the tests\",\"Role\":\"reviewer\",\"TypeName\":\"Reviewer\"}]"}}]}
+{"step_index":7,"source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"2026-01-02T12:01:03Z","content":"Conversation ID: child-12345678\nThe tests look good."}
+{"step_index":8,"source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"2026-01-02T12:01:04Z","content":"The reviewer found no issues."}

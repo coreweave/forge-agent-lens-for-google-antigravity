@@ -1,0 +1,5 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "forge-agent-lens-for-google-antigravity",
+  "description": "Export Google Antigravity agent, model, tool, and sub-agent spans through the CoreWeave Forge SDK."
+}
