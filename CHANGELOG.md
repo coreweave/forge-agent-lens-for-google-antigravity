@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.2] - 2026-09-29
 
 ### Added
 
@@ -58,6 +58,6 @@ All notable changes to this project are documented here. The project follows
 - Token usage, exact model request settings, response IDs, and delegated
   sub-agent internals are not exposed by the transcript and are not synthesized.
 
-[Unreleased]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/compare/v0.1.1...HEAD
+[0.1.2]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.2
 [0.1.1]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.1
 [0.1.0]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.0

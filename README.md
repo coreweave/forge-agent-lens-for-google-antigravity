@@ -74,8 +74,8 @@ release; an unpinned `uv tool install` keeps the installed version. Rerun
 `install` after changing versions. Antigravity copies the plugin during
 installation, and installing over an existing plugin replaces it.
 
-Versions 0.1.0 and 0.1.1 have no `install` command. With those, install the
-plugin from the latest release archive, which works with every version:
+`install` needs 0.1.2 or newer. With 0.1.0 or 0.1.1, install the plugin from
+the latest release archive, which works with every version:
 
 ```bash
 curl -fsSLO https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip
