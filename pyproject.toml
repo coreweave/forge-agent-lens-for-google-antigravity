@@ -22,7 +22,7 @@ Issues = "https://github.com/coreweave/forge-agent-lens-for-google-antigravity/i
 Repository = "https://github.com/coreweave/forge-agent-lens-for-google-antigravity"
 
 [project.scripts]
-forge-agent-lens-for-google-antigravity = "forge_antigravity.hook:main"
+forge-agent-lens-for-google-antigravity = "forge_antigravity.cli:main"
 
 [dependency-groups]
 test = [

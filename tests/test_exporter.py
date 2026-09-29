@@ -116,6 +116,7 @@ def test_export_builds_forge_conversation_and_checkpoints(tmp_path: Path, monkey
         "forge.integration.antigravity.termination.reason": "model_stop",
     }
     assert len(logged[0]["turns"]) == 1
+    assert summary.conversation_id == "sdk-boundary"
     assert summary.trace_ids == ("trace",)
     assert lifecycle == ["force_flush", "shutdown"]
     assert load_state(payload).last_exported_step == 8

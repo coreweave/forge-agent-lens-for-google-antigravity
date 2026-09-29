@@ -4,16 +4,18 @@ import json
 import os
 import subprocess
 import sys
+from importlib.resources import files
 from pathlib import Path
 
 from forge_antigravity import __version__
 
 ROOT = Path(__file__).parents[1]
+PLUGIN = files("forge_antigravity") / "plugin"
 
 
 def test_plugin_manifest_and_hooks_match_the_supported_contract() -> None:
-    manifest = json.loads((ROOT / "plugin" / "plugin.json").read_text(encoding="utf-8"))
-    hooks = json.loads((ROOT / "plugin" / "hooks.json").read_text(encoding="utf-8"))
+    manifest = json.loads((PLUGIN / "plugin.json").read_text(encoding="utf-8"))
+    hooks = json.loads((PLUGIN / "hooks.json").read_text(encoding="utf-8"))
 
     assert manifest == {
         "$schema": "https://antigravity.google/schemas/v1/plugin.json",

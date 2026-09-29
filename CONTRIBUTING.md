@@ -38,7 +38,7 @@ uvx --from zizmor==1.30.1 zizmor --pedantic .
 uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint
 uv build
 uvx --from twine==7.0.0 twine check dist/*
-agy plugin validate plugin
+agy plugin validate src/forge_antigravity/plugin
 uv run python examples/local_smoke_test.py
 ```
 

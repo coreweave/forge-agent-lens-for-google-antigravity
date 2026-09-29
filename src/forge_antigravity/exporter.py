@@ -36,6 +36,7 @@ class ExportSummary:
     turns: int
     spans: int
     last_step: int
+    conversation_id: str
     trace_ids: tuple[str, ...] = ()
     root_span_ids: tuple[str, ...] = ()
 
@@ -58,7 +59,12 @@ def export_pending_turns(
     turns = split_turns(_load_stable_transcript(transcript_path, conversation_id=conversation_id))
     pending = _select_pending_turns(turns, state)
     if not pending:
-        return ExportSummary(turns=0, spans=0, last_step=state.last_exported_step)
+        return ExportSummary(
+            turns=0,
+            spans=0,
+            last_step=state.last_exported_step,
+            conversation_id=conversation_id,
+        )
 
     history_start = state.history_start_step
     if history_start is None:
@@ -140,6 +146,7 @@ def export_pending_turns(
         turns=len(pending),
         spans=result.span_count,
         last_step=last_step,
+        conversation_id=conversation_id,
         trace_ids=tuple(result.trace_ids),
         root_span_ids=tuple(result.root_span_ids),
     )

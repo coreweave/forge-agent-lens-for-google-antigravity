@@ -72,9 +72,9 @@ jobs:
           uv build
           uvx --from twine==7.0.0 twine check dist/forge_agent_lens_for_google_antigravity-*
           mkdir -p dist/plugin-archive
-          cp -R plugin/. dist/plugin-archive/
+          cp -R src/forge_antigravity/plugin/. dist/plugin-archive/
           (cd dist/plugin-archive && zip -qr ../forge-agent-lens-for-google-antigravity-plugin.zip .)
-          tar -czf dist/forge-agent-lens-for-google-antigravity-plugin.tar.gz -C plugin .
+          tar -czf dist/forge-agent-lens-for-google-antigravity-plugin.tar.gz -C src/forge_antigravity/plugin .
           rm -rf dist/plugin-archive
           (cd dist && sha256sum forge_agent_lens_for_google_antigravity-* forge-agent-lens-for-google-antigravity-plugin.* > SHA256SUMS)
 
