@@ -69,8 +69,9 @@ This project is licensed under Apache-2.0 (see [`LICENSE`](./LICENSE)) and follo
 
 ## Releases
 
-1. Update `CHANGELOG.md` and both version declarations in `pyproject.toml` and
-   `src/forge_antigravity/__init__.py`.
+1. Update `CHANGELOG.md`, both version declarations in `pyproject.toml` and
+   `src/forge_antigravity/__init__.py`, and `VERSION` in the README install
+   example.
 2. Run the full local validation list above.
 3. Merge the release commit to `main` and create an annotated `v<version>` tag.
 4. Push the tag. The release workflow verifies the version, reruns checks,

@@ -27,7 +27,7 @@ plugin's stdin/stdout hook entrypoint, not a user-facing CLI.
 - Python 3.10 or newer.
 - Antigravity CLI 1.1.10 or newer; the current release is recommended.
 - A W&B API key and destination in `entity/project` form.
-- [`uv`](https://docs.astral.sh/uv/) for source installation.
+- [`uv`](https://docs.astral.sh/uv/) to install the hook executable.
 
 See Google's official [hook reference](https://antigravity.google/docs/hooks),
 [plugin documentation](https://antigravity.google/docs/plugins?tab=cli), and
@@ -35,13 +35,17 @@ See Google's official [hook reference](https://antigravity.google/docs/hooks),
 
 ## Install
 
+Install the hook executable from PyPI and the plugin from the matching GitHub
+release:
+
 ```bash
-git clone https://github.com/coreweave/forge-agent-lens-for-google-antigravity.git
-cd forge-agent-lens-for-google-antigravity
-uv tool install .
+VERSION=0.1.0
+uv tool install "forge-agent-lens-for-google-antigravity==$VERSION"
 command -v forge-agent-lens-for-google-antigravity
-agy plugin validate plugin
-agy plugin install plugin
+curl -fsSLO "https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/download/v$VERSION/forge-agent-lens-for-google-antigravity-plugin-$VERSION.zip"
+unzip -qo "forge-agent-lens-for-google-antigravity-plugin-$VERSION.zip" -d forge-agent-lens-plugin
+agy plugin validate forge-agent-lens-plugin
+agy plugin install forge-agent-lens-plugin
 ```
 
 The executable must be on `PATH` in the environment that launches Antigravity.
@@ -55,13 +59,15 @@ export WANDB_API_KEY=...
 agy
 ```
 
-Antigravity copies plugins during installation. Reinstall after changing files
-under `plugin/`:
+Antigravity copies plugins during installation. To upgrade, uninstall the
+plugin and rerun the install commands with the new `VERSION`:
 
 ```bash
 agy plugin uninstall forge-agent-lens-for-google-antigravity
-agy plugin install plugin
 ```
+
+To try unreleased changes, run `uv tool install --reinstall .` in a checkout and
+install the plugin from its `plugin/` directory.
 
 ## How export works
 
