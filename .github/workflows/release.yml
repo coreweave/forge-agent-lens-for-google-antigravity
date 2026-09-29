@@ -69,15 +69,14 @@ jobs:
         working-directory: forge-agent-lens-for-google-antigravity
         run: |
           set -euo pipefail
-          VERSION="$(uv run --no-sync python -c 'from forge_antigravity import __version__; print(__version__)')"
           uv build
           uvx --from twine==7.0.0 twine check dist/forge_agent_lens_for_google_antigravity-*
           mkdir -p dist/plugin-archive
           cp -R plugin/. dist/plugin-archive/
-          (cd dist/plugin-archive && zip -qr "../forge-agent-lens-for-google-antigravity-plugin-$VERSION.zip" .)
-          tar -czf "dist/forge-agent-lens-for-google-antigravity-plugin-$VERSION.tar.gz" -C plugin .
+          (cd dist/plugin-archive && zip -qr ../forge-agent-lens-for-google-antigravity-plugin.zip .)
+          tar -czf dist/forge-agent-lens-for-google-antigravity-plugin.tar.gz -C plugin .
           rm -rf dist/plugin-archive
-          (cd dist && sha256sum forge_agent_lens_for_google_antigravity-* forge-agent-lens-for-google-antigravity-plugin-* > SHA256SUMS)
+          (cd dist && sha256sum forge_agent_lens_for_google_antigravity-* forge-agent-lens-for-google-antigravity-plugin.* > SHA256SUMS)
 
       - name: Upload Python distributions
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -91,7 +90,7 @@ jobs:
         with:
           name: plugin-archives-and-checksums
           path: |
-            forge-agent-lens-for-google-antigravity/dist/forge-agent-lens-for-google-antigravity-plugin-*
+            forge-agent-lens-for-google-antigravity/dist/forge-agent-lens-for-google-antigravity-plugin.*
             forge-agent-lens-for-google-antigravity/dist/SHA256SUMS
           if-no-files-found: error
 

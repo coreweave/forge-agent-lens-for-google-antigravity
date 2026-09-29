@@ -35,15 +35,14 @@ See Google's official [hook reference](https://antigravity.google/docs/hooks),
 
 ## Install
 
-Install the hook executable from PyPI and the plugin from the matching GitHub
+Install the hook executable from PyPI and the plugin from the latest GitHub
 release:
 
 ```bash
-VERSION=0.1.0
-uv tool install "forge-agent-lens-for-google-antigravity==$VERSION"
+uv tool install forge-agent-lens-for-google-antigravity
 command -v forge-agent-lens-for-google-antigravity
-curl -fsSLO "https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/download/v$VERSION/forge-agent-lens-for-google-antigravity-plugin-$VERSION.zip"
-unzip -qo "forge-agent-lens-for-google-antigravity-plugin-$VERSION.zip" -d forge-agent-lens-plugin
+curl -fsSLO https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip
+unzip -qo forge-agent-lens-for-google-antigravity-plugin.zip -d forge-agent-lens-plugin
 agy plugin validate forge-agent-lens-plugin
 agy plugin install forge-agent-lens-plugin
 ```
@@ -59,11 +58,12 @@ export WANDB_API_KEY=...
 agy
 ```
 
-Antigravity copies plugins during installation. To upgrade, uninstall the
-plugin and rerun the install commands with the new `VERSION`:
+Antigravity copies the plugin during installation. To upgrade, upgrade the
+executable, then rerun the `curl`, `unzip`, and `agy plugin install` commands
+above; installing over an existing plugin replaces it:
 
 ```bash
-agy plugin uninstall forge-agent-lens-for-google-antigravity
+uv tool upgrade forge-agent-lens-for-google-antigravity
 ```
 
 To try unreleased changes, run `uv tool install --reinstall .` in a checkout and
