@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org/).
 
-## [0.1.0] - 2026-09-18
+## [0.1.0] - 2026-09-29
 
 ### Added
 
@@ -17,8 +17,8 @@ All notable changes to this project are documented here. The project follows
   content controls, and fail-open export behavior.
 - A network-isolated local smoke example and unit, integration, privacy,
   packaging, and plugin tests.
-- CI across Python 3.10 through 3.14 and automation for tagged GitHub release
-  artifacts.
+- CI across Python 3.10 through 3.14 and tag-triggered publishing to PyPI and
+  GitHub Releases.
 
 ### Changed
 
