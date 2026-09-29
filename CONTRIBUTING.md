@@ -74,7 +74,8 @@ This project is licensed under Apache-2.0 (see [`LICENSE`](./LICENSE)) and follo
 2. Run the full local validation list above.
 3. Merge the release commit to `main` and create an annotated `v<version>` tag.
 4. Push the tag. The release workflow verifies the version, reruns checks,
-   builds Python and plugin artifacts, generates SHA-256 checksums, and creates
-   the GitHub release.
+   builds Python and plugin artifacts, generates SHA-256 checksums, publishes
+   the wheel and sdist to PyPI through trusted publishing, and then creates the
+   GitHub release.
 
 Never reuse or move an existing release tag.

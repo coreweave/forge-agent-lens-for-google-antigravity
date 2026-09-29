@@ -166,20 +166,26 @@ uv run --with-editable /path/to/forge-sdk/python pytest
 ```
 
 CI runs Python 3.10 through 3.14, enforces branch coverage of at least 90%, and
-validates release artifacts. See [CONTRIBUTING.md](CONTRIBUTING.md) and
-[CHANGELOG.md](CHANGELOG.md).
+validates release artifacts. See [CONTRIBUTING.md][contributing] and
+[CHANGELOG.md][changelog].
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Contributions require agreeing to the
-[CoreWeave CLA](CLA.md). Report vulnerabilities privately as described in
-[SECURITY.md](SECURITY.md).
+See [CONTRIBUTING.md][contributing]. Contributions require agreeing to the
+[CoreWeave CLA][cla]. Report vulnerabilities privately as described in
+[SECURITY.md][security].
 
 ## License
 
-Apache 2.0. See [LICENSE](LICENSE).
+Apache 2.0. See [LICENSE][license].
 
 ## Trademarks
 
 Google Antigravity is a trademark of Google LLC. This project is not affiliated
 with, sponsored by, or endorsed by Google.
+
+[changelog]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CHANGELOG.md
+[cla]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CLA.md
+[contributing]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md
+[license]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/LICENSE
+[security]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/SECURITY.md
