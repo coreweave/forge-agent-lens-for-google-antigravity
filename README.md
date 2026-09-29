@@ -47,9 +47,9 @@ will appear:
 ```text
 Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity X.Y.Z).
 ✓ Hook executable      /Users/you/.local/bin/forge-agent-lens-for-google-antigravity
-✓ FORGE_TRACE_PROJECT  acme/agents
+✓ FORGE_TRACE_PROJECT  my-team/antigravity-traces
 ✓ W&B API key          WANDB_API_KEY
-View traces: https://wandb.ai/acme/agents/weave/agents
+View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents
 ```
 
 The executable must be on `PATH` in the environment that launches Antigravity.
@@ -94,7 +94,7 @@ self-managed instance, links follow `WANDB_BASE_URL`, or `WANDB_APP_URL` when
 set. After each exported turn, the hook logs a link to that conversation:
 
 ```text
-forge-agent-lens-for-google-antigravity: View traces: https://wandb.ai/acme/agents/weave/agents/conversations/<conversation-id>
+forge-agent-lens-for-google-antigravity: View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents/conversations/<conversation-id>
 ```
 
 Antigravity shows hook output neither in its terminal UI nor in `agy -p`
