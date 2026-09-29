@@ -27,7 +27,7 @@ plugin's stdin/stdout hook entrypoint, not a user-facing CLI.
 - Python 3.10 or newer.
 - Antigravity CLI 1.1.10 or newer; the current release is recommended.
 - A W&B API key and destination in `entity/project` form.
-- [`uv`](https://docs.astral.sh/uv/) for source installation.
+- [`uv`](https://docs.astral.sh/uv/) to install the hook executable.
 
 See Google's official [hook reference](https://antigravity.google/docs/hooks),
 [plugin documentation](https://antigravity.google/docs/plugins?tab=cli), and
@@ -35,13 +35,16 @@ See Google's official [hook reference](https://antigravity.google/docs/hooks),
 
 ## Install
 
+Install the hook executable from PyPI and the plugin from the latest GitHub
+release:
+
 ```bash
-git clone https://github.com/coreweave/forge-agent-lens-for-google-antigravity.git
-cd forge-agent-lens-for-google-antigravity
-uv tool install .
+uv tool install forge-agent-lens-for-google-antigravity
 command -v forge-agent-lens-for-google-antigravity
-agy plugin validate plugin
-agy plugin install plugin
+curl -fsSLO https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip
+unzip -qo forge-agent-lens-for-google-antigravity-plugin.zip -d forge-agent-lens-plugin
+agy plugin validate forge-agent-lens-plugin
+agy plugin install forge-agent-lens-plugin
 ```
 
 The executable must be on `PATH` in the environment that launches Antigravity.
@@ -55,13 +58,16 @@ export WANDB_API_KEY=...
 agy
 ```
 
-Antigravity copies plugins during installation. Reinstall after changing files
-under `plugin/`:
+Antigravity copies the plugin during installation. To upgrade, upgrade the
+executable, then rerun the `curl`, `unzip`, and `agy plugin install` commands
+above; installing over an existing plugin replaces it:
 
 ```bash
-agy plugin uninstall forge-agent-lens-for-google-antigravity
-agy plugin install plugin
+uv tool upgrade forge-agent-lens-for-google-antigravity
 ```
+
+To try unreleased changes, run `uv tool install --reinstall .` in a checkout and
+install the plugin from its `plugin/` directory.
 
 ## How export works
 

@@ -3,6 +3,15 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-09-29
+
+### Changed
+
+- Release plugin archives are named without the version, so the latest plugin
+  is always at `releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip`.
+- The README installs the hook executable from PyPI and the plugin from the
+  latest GitHub release.
+
 ## [0.1.0] - 2026-09-29
 
 ### Added
@@ -31,4 +40,5 @@ All notable changes to this project are documented here. The project follows
 - Token usage, exact model request settings, response IDs, and delegated
   sub-agent internals are not exposed by the transcript and are not synthesized.
 
+[0.1.1]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.1
 [0.1.0]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.0
