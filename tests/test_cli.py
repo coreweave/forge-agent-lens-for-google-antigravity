@@ -58,6 +58,13 @@ def test_no_command_on_a_terminal_exits_instead_of_waiting_for_a_payload(
     )
 
 
+def test_no_command_with_closed_stdin_still_fails_open(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(cli.sys, "stdin", None)
+
+    assert cli.main([]) == 0
+    assert json.loads(capsys.readouterr().out) == {"decision": "allow"}
+
+
 def test_version_prints_the_package_version(capsys) -> None:
     with pytest.raises(SystemExit) as exit_info:
         cli.main(["--version"])

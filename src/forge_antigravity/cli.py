@@ -30,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     commands.add_parser("install", help="install the Antigravity plugin and check trace settings")
     if parser.parse_args(argv).command == "install":
         return install()
-    if sys.stdin.isatty():
+    if sys.stdin is not None and sys.stdin.isatty():
         parser.error(
             "expected a Stop hook payload on stdin; "
             f"to set up the plugin, run: {_EXECUTABLE} install"
