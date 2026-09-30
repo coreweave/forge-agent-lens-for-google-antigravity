@@ -17,6 +17,8 @@ All notable changes to this project are documented here. The project follows
 
 ### Changed
 
+- When run from a terminal without a command, the executable prints usage and
+  exits instead of waiting for a hook payload on stdin.
 - The plugin files moved from `plugin/` into the Python package
   (`src/forge_antigravity/plugin/`) so the wheel ships them. Release archive
   contents are unchanged.

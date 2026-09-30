@@ -36,6 +36,28 @@ def test_no_command_runs_the_stop_hook(monkeypatch, capsys) -> None:
     assert json.loads(capsys.readouterr().out) == {"decision": "allow"}
 
 
+class _Terminal(io.StringIO):
+    def isatty(self) -> bool:
+        return True
+
+
+def test_no_command_on_a_terminal_exits_instead_of_waiting_for_a_payload(
+    monkeypatch, capsys
+) -> None:
+    monkeypatch.setattr(cli.sys, "stdin", _Terminal())
+
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main([])
+
+    assert exit_info.value.code == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err.splitlines()[-1] == (
+        "forge-agent-lens-for-google-antigravity: error: expected a Stop hook payload on stdin; "
+        "to set up the plugin, run: forge-agent-lens-for-google-antigravity install"
+    )
+
+
 def test_version_prints_the_package_version(capsys) -> None:
     with pytest.raises(SystemExit) as exit_info:
         cli.main(["--version"])
