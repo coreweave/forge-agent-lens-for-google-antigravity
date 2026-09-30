@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import subprocess
+from importlib.resources import files
 from pathlib import Path
 
 import pytest
@@ -12,21 +13,38 @@ from forge_antigravity import __version__, cli, hook
 INSTALLED = (
     f"Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity {__version__}).\n"
 )
-EXECUTABLE = "✓ Hook executable      /opt/bin/forge-agent-lens-for-google-antigravity\n"
+HOOK_COMMAND = f"uvx forge-agent-lens-for-google-antigravity@{__version__}"
+PACKAGED_PLUGIN = files("forge_antigravity") / "plugin"
+
+
+class _Distribution:
+    def __init__(self, direct_url: str | None) -> None:
+        self.direct_url = direct_url
+
+    def read_text(self, filename: str) -> str | None:
+        return self.direct_url if filename == "direct_url.json" else None
 
 
 @pytest.fixture
-def agy(monkeypatch, tmp_path: Path) -> list[tuple[list[str], set[str]]]:
-    calls: list[tuple[list[str], set[str]]] = []
+def agy(monkeypatch, tmp_path: Path) -> list[tuple[list[str], dict[str, str]]]:
+    calls: list[tuple[list[str], dict[str, str]]] = []
 
     def run(args: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
-        calls.append((args, {path.name for path in Path(args[-1]).iterdir()}))
+        calls.append((args, {path.name: path.read_text() for path in Path(args[-1]).iterdir()}))
         return subprocess.CompletedProcess(args, 0)
 
+    monkeypatch.setattr(cli, "distribution", lambda name: _Distribution(None))
     monkeypatch.setattr(cli.shutil, "which", lambda name: f"/opt/bin/{name}")
     monkeypatch.setattr(cli.subprocess, "run", run)
     monkeypatch.setenv("HOME", str(tmp_path))
     return calls
+
+
+def _hook_commands(plugin: dict[str, str]) -> list[str]:
+    return [
+        handler["command"]
+        for handler in json.loads(plugin["hooks.json"])["forge-agentlens"]["Stop"]
+    ]
 
 
 def test_no_command_runs_the_stop_hook(monkeypatch, capsys) -> None:
@@ -81,12 +99,15 @@ def test_install_registers_the_bundled_plugin_and_reports_a_ready_setup(
 
     assert cli.main(["install"]) == 0
 
-    assert [(args[:3], files) for args, files in agy] == [
-        (["/opt/bin/agy", "plugin", "install"], {"plugin.json", "hooks.json"})
-    ]
+    [(args, plugin)] = agy
+    assert args[:3] == ["/opt/bin/agy", "plugin", "install"]
+    assert plugin["plugin.json"] == PACKAGED_PLUGIN.joinpath("plugin.json").read_text()
+    packaged_hooks = json.loads(PACKAGED_PLUGIN.joinpath("hooks.json").read_text())
+    packaged_hooks["forge-agentlens"]["Stop"][0]["command"] = HOOK_COMMAND
+    assert json.loads(plugin["hooks.json"]) == packaged_hooks
     assert capsys.readouterr().out == (
         INSTALLED
-        + EXECUTABLE
+        + f"✓ Hook command         {HOOK_COMMAND}\n"
         + "✓ FORGE_TRACE_PROJECT  my-team/antigravity-traces\n"
         + "✓ W&B API key          WANDB_API_KEY\n"
         + "View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents\n"
@@ -98,7 +119,7 @@ def test_install_explains_missing_trace_settings(agy, capsys) -> None:
 
     assert capsys.readouterr().out == (
         INSTALLED
-        + EXECUTABLE
+        + f"✓ Hook command         {HOOK_COMMAND}\n"
         + "✗ FORGE_TRACE_PROJECT  not set: export FORGE_TRACE_PROJECT=entity/project\n"
         + "✗ W&B API key          not found: set WANDB_API_KEY or add api.wandb.ai to ~/.netrc\n"
         + "Antigravity reads these settings from the environment it starts in.\n"
@@ -140,15 +161,27 @@ def test_install_reads_netrc_for_the_configured_wandb_host(
     assert expected in capsys.readouterr().out
 
 
-def test_install_flags_a_hook_executable_missing_from_path(agy, monkeypatch, capsys) -> None:
+def test_install_points_a_checkout_build_hook_at_its_own_environment(
+    agy, monkeypatch, capsys
+) -> None:
+    monkeypatch.setattr(
+        cli, "distribution", lambda name: _Distribution('{"url": "file:///src/checkout"}')
+    )
+    monkeypatch.setattr(cli.sysconfig, "get_path", lambda name: "/src/my checkout/.venv/bin")
+
+    assert cli.main(["install"]) == 0
+
+    command = "'/src/my checkout/.venv/bin/forge-agent-lens-for-google-antigravity'"
+    assert _hook_commands(agy[0][1]) == [command]
+    assert f"✓ Hook command         {command}\n" in capsys.readouterr().out
+
+
+def test_install_flags_uvx_missing_from_path(agy, monkeypatch, capsys) -> None:
     monkeypatch.setattr(cli.shutil, "which", lambda name: "/opt/bin/agy" if name == "agy" else None)
 
     assert cli.main(["install"]) == 0
 
-    assert (
-        "✗ Hook executable      not on PATH: "
-        "uv tool install forge-agent-lens-for-google-antigravity\n"
-    ) in capsys.readouterr().out
+    assert "✗ Hook command         uvx not on PATH: install uv\n" in capsys.readouterr().out
 
 
 def test_install_requires_the_antigravity_cli(monkeypatch, capsys) -> None:

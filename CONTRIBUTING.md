@@ -49,22 +49,19 @@ SDK exporter against an in-process OTLP receiver.
 
 ## Test a change in Antigravity
 
-Antigravity runs whichever `forge-agent-lens-for-google-antigravity` is first
-on `PATH`, so install the build under test as the uv tool, then rerun `install`.
-
-Development build: install this checkout in editable mode. Python edits take
-effect at the next Stop hook; rerun `install` after editing the plugin files,
-because Antigravity copies them.
+`install` points the hook at the build that ran it. Run from a checkout, it
+registers this checkout's `.venv` executable, so Python edits take effect at the
+next Stop hook. Rerun `install` after editing the plugin files, because
+Antigravity copies them.
 
 ```bash
-uv tool install --editable . && forge-agent-lens-for-google-antigravity install
+uv run forge-agent-lens-for-google-antigravity install
 ```
 
-Released build: install from PyPI with `@latest` or a pinned version. A plain or
-`--upgrade` install leaves a checkout build in place.
+Released build: run the installer from PyPI with `@latest` or a pinned version.
 
 ```bash
-uv tool install forge-agent-lens-for-google-antigravity@latest && forge-agent-lens-for-google-antigravity install
+uvx forge-agent-lens-for-google-antigravity@latest install
 ```
 
 ## Pull requests

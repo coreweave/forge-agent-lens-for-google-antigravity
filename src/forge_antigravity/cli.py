@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import argparse
+import json
 import netrc
 import os
+import shlex
 import shutil
 
 # The installer runs agy with a fixed argument list and never enables a shell.
 import subprocess  # nosec B404
 import sys
-from importlib.resources import as_file, files
+import sysconfig
+import tempfile
+from importlib.metadata import distribution
+from importlib.resources import files
+from pathlib import Path
 from urllib.parse import urlparse
 
 from forge_antigravity import __version__, hook
@@ -46,18 +52,19 @@ def install() -> int:
             f"{_EXECUTABLE}: agy is not on PATH; install the Antigravity CLI first", file=sys.stderr
         )
         return 1
-    with as_file(files("forge_antigravity") / "plugin") as plugin:
-        command = [agy, "plugin", "install", str(plugin)]
-        completed = subprocess.run(command, check=False)  # nosec B603
+    hook_command = _hook_command()
+    with tempfile.TemporaryDirectory() as plugin:
+        _write_plugin(Path(plugin), shlex.join(hook_command))
+        completed = subprocess.run([agy, "plugin", "install", plugin], check=False)  # nosec B603
     if completed.returncode != 0:
         return completed.returncode
 
     print(f"Installed the Antigravity plugin ({_EXECUTABLE} {__version__}).")
-    executable = shutil.which(_EXECUTABLE)
+    runner = shutil.which(hook_command[0])
     _report(
-        executable is not None,
-        "Hook executable",
-        executable or f"not on PATH: uv tool install {_EXECUTABLE}",
+        runner is not None,
+        "Hook command",
+        shlex.join(hook_command) if runner else f"{hook_command[0]} not on PATH: install uv",
     )
 
     project = os.environ.get("FORGE_TRACE_PROJECT", "").strip()
@@ -80,9 +87,26 @@ def install() -> int:
 
     if url:
         print(f"View traces: {url}")
-    if executable is None or url is None or key_source is None:
+    if runner is None or url is None or key_source is None:
         print("Antigravity reads these settings from the environment it starts in.")
     return 0
+
+
+def _hook_command() -> list[str]:
+    # uvx can fetch only a PyPI release, so a checkout build runs in place from its environment.
+    if distribution(_EXECUTABLE).read_text("direct_url.json") is None:
+        return ["uvx", f"{_EXECUTABLE}@{__version__}"]
+    return [str(Path(sysconfig.get_path("scripts")) / _EXECUTABLE)]
+
+
+def _write_plugin(destination: Path, command: str) -> None:
+    source = files("forge_antigravity") / "plugin"
+    manifest = source.joinpath("plugin.json").read_text(encoding="utf-8")
+    (destination / "plugin.json").write_text(manifest, encoding="utf-8")
+    hooks = json.loads(source.joinpath("hooks.json").read_text(encoding="utf-8"))
+    for handler in hooks["forge-agentlens"]["Stop"]:
+        handler["command"] = command
+    (destination / "hooks.json").write_text(json.dumps(hooks, indent=2) + "\n", encoding="utf-8")
 
 
 def _report(ok: bool, label: str, detail: str) -> None:

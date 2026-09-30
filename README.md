@@ -20,7 +20,7 @@ endpoint selection, OpenTelemetry encoding, export, flushing, and shutdown.
 
 The `forge-agent-lens-for-google-antigravity` executable is the plugin's Stop
 hook: with no arguments it reads a hook payload on stdin. Its `install` command
-sets up the plugin.
+registers the plugin with Antigravity.
 
 ## Requirements
 
@@ -28,7 +28,7 @@ sets up the plugin.
 - Python 3.10 or newer.
 - Antigravity CLI 1.1.10 or newer; the current release is recommended.
 - A W&B API key and destination in `entity/project` form.
-- [`uv`](https://docs.astral.sh/uv/) to install the hook executable.
+- [`uv`](https://docs.astral.sh/uv/), which runs the hook through `uvx`.
 
 See Google's official [hook reference](https://antigravity.google/docs/hooks),
 [plugin documentation](https://antigravity.google/docs/plugins?tab=cli), and
@@ -37,23 +37,23 @@ See Google's official [hook reference](https://antigravity.google/docs/hooks),
 ## Install
 
 ```bash
-uv tool install forge-agent-lens-for-google-antigravity@latest && forge-agent-lens-for-google-antigravity install
+uvx forge-agent-lens-for-google-antigravity@latest install
 ```
 
-`install` registers the plugin bundled with the executable through
-`agy plugin install`, then checks what the hook needs and prints where traces
-will appear:
+`install` registers the bundled plugin through `agy plugin install`, with a
+Stop hook that runs this exact version through `uvx`, then checks what the hook
+needs and prints where traces will appear:
 
 ```text
 Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity X.Y.Z).
-✓ Hook executable      /Users/you/.local/bin/forge-agent-lens-for-google-antigravity
+✓ Hook command         uvx forge-agent-lens-for-google-antigravity@X.Y.Z
 ✓ FORGE_TRACE_PROJECT  my-team/antigravity-traces
 ✓ W&B API key          WANDB_API_KEY
 View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents
 ```
 
-The executable must be on `PATH` in the environment that launches Antigravity.
-Set the destination there too. The Forge SDK reads `WANDB_API_KEY` directly or
+`uvx` must be on `PATH` in the environment that launches Antigravity. Set the
+destination there too. The Forge SDK reads `WANDB_API_KEY` directly or
 resolves it from the W&B entry in `.netrc`.
 
 ```bash
@@ -66,16 +66,19 @@ To install a specific version, pin it. This also switches an existing install
 to that version:
 
 ```bash
-uv tool install forge-agent-lens-for-google-antigravity==X.Y.Z && forge-agent-lens-for-google-antigravity install
+uvx forge-agent-lens-for-google-antigravity@X.Y.Z install
 ```
 
-`@latest` upgrades an existing install; a plain `uv tool install` keeps the
-installed version. Rerun `install` after changing versions.
-Antigravity copies the plugin during installation, and installing over an
-existing plugin replaces it.
+Rerun the `@latest` command to upgrade. Antigravity copies the plugin during
+installation, and installing over an existing plugin replaces it. Running
+`install` through `uvx` caches that version, so the first Stop hook doesn't
+download it. Afterwards, a `uv tool` install from 0.1.0 or 0.1.1 is no longer
+used; remove it with `uv tool uninstall forge-agent-lens-for-google-antigravity`.
 
-`install` needs 0.1.2 or newer. With 0.1.0 or 0.1.1, install the plugin from
-the latest release archive, which works with every version:
+`install` needs 0.1.2 or newer. For 0.1.0 or 0.1.1, install the executable with
+`uv tool install forge-agent-lens-for-google-antigravity==X.Y.Z`, then the
+plugin from the latest release archive. The archive's hook runs the executable
+on `PATH`, so it works with every version:
 
 ```bash
 curl -fsSLO https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip
