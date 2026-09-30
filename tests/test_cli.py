@@ -161,12 +161,11 @@ def test_install_reads_netrc_for_the_configured_wandb_host(
     assert expected in capsys.readouterr().out
 
 
-def test_install_points_a_checkout_build_hook_at_its_own_environment(
+def test_install_points_an_editable_checkout_hook_at_its_own_environment(
     agy, monkeypatch, capsys
 ) -> None:
-    monkeypatch.setattr(
-        cli, "distribution", lambda name: _Distribution('{"url": "file:///src/checkout"}')
-    )
+    direct_url = '{"url": "file:///src/checkout", "dir_info": {"editable": true}}'
+    monkeypatch.setattr(cli, "distribution", lambda name: _Distribution(direct_url))
     monkeypatch.setattr(cli.sysconfig, "get_path", lambda name: "/src/my checkout/.venv/bin")
 
     assert cli.main(["install"]) == 0
@@ -174,6 +173,38 @@ def test_install_points_a_checkout_build_hook_at_its_own_environment(
     command = "'/src/my checkout/.venv/bin/forge-agent-lens-for-google-antigravity'"
     assert _hook_commands(agy[0][1]) == [command]
     assert f"✓ Hook command         {command}\n" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    ("direct_url", "source"),
+    [
+        ('{"url": "file:///src/my%20checkout", "dir_info": {}}', "'/src/my checkout'"),
+        (
+            '{"url": "file:///src/dist/forge.whl", "archive_info": {"hash": "sha256=00"}}',
+            "/src/dist/forge.whl",
+        ),
+        (
+            '{"url": "https://example.com/forge.whl", "archive_info": {}}',
+            "https://example.com/forge.whl",
+        ),
+        (
+            '{"url": "https://github.com/coreweave/forge.git", '
+            '"vcs_info": {"vcs": "git", "commit_id": "d27ddf4", "requested_revision": "main"}}',
+            "git+https://github.com/coreweave/forge.git@d27ddf4",
+        ),
+    ],
+    ids=["directory", "wheel", "url", "git"],
+)
+def test_install_reruns_a_non_editable_build_from_its_source(
+    direct_url: str, source: str, agy, monkeypatch
+) -> None:
+    monkeypatch.setattr(cli, "distribution", lambda name: _Distribution(direct_url))
+
+    assert cli.main(["install"]) == 0
+
+    assert _hook_commands(agy[0][1]) == [
+        f"uvx --from {source} forge-agent-lens-for-google-antigravity"
+    ]
 
 
 def test_install_flags_uvx_missing_from_path(agy, monkeypatch, capsys) -> None:

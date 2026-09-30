@@ -58,6 +58,18 @@ Antigravity copies them.
 uv run forge-agent-lens-for-google-antigravity install
 ```
 
+To test a built wheel or a pushed branch, run the installer from it. The hook
+reruns the same source through `uvx`, and a git source stays pinned to the
+commit it resolved to:
+
+```bash
+uvx --from dist/forge_agent_lens_for_google_antigravity-X.Y.Z-py3-none-any.whl forge-agent-lens-for-google-antigravity install
+uvx --from git+https://github.com/coreweave/forge-agent-lens-for-google-antigravity@<branch> forge-agent-lens-for-google-antigravity install
+```
+
+Avoid `uvx --from .` for a checkout you're editing: uv caches that build and
+doesn't rebuild it when Python files change.
+
 Released build: run the installer from PyPI with `@latest` or a pinned version.
 
 ```bash

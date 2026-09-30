@@ -15,7 +15,7 @@ import tempfile
 from importlib.metadata import distribution
 from importlib.resources import files
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from forge_antigravity import __version__, hook
 from forge_antigravity.links import agents_url
@@ -93,10 +93,20 @@ def install() -> int:
 
 
 def _hook_command() -> list[str]:
-    # uvx can fetch only a PyPI release, so a checkout build runs in place from its environment.
-    if distribution(_EXECUTABLE).read_text("direct_url.json") is None:
+    direct_url = distribution(_EXECUTABLE).read_text("direct_url.json")
+    if direct_url is None:
         return ["uvx", f"{_EXECUTABLE}@{__version__}"]
-    return [str(Path(sysconfig.get_path("scripts")) / _EXECUTABLE)]
+    origin = json.loads(direct_url)
+    if origin.get("dir_info", {}).get("editable"):
+        # An editable install is a live checkout, so the hook runs its environment in place.
+        return [str(Path(sysconfig.get_path("scripts")) / _EXECUTABLE)]
+    # Any other local build may live in uvx's temporary cache, so the hook reruns its source.
+    source: str = origin["url"]
+    if vcs := origin.get("vcs_info"):
+        source = f"{vcs['vcs']}+{source}@{vcs['commit_id']}"
+    elif source.startswith("file://"):
+        source = unquote(urlparse(source).path)
+    return ["uvx", "--from", source, _EXECUTABLE]
 
 
 def _write_plugin(destination: Path, command: str) -> None:

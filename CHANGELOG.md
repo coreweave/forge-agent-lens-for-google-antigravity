@@ -21,8 +21,9 @@ All notable changes to this project are documented here. The project follows
   exits instead of waiting for a hook payload on stdin.
 - A plugin registered by `install` runs its Stop hook as
   `uvx forge-agent-lens-for-google-antigravity@X.Y.Z`, so the executable no
-  longer needs to be installed on `PATH`. Run from a checkout, `install` points
-  the hook at the checkout's executable instead.
+  longer needs to be installed on `PATH`. Run from an editable checkout,
+  `install` points the hook at the checkout's executable; run through
+  `uvx --from <path or URL>`, the hook reruns that source.
 - The plugin files moved from `plugin/` into the Python package
   (`src/forge_antigravity/plugin/`) so the wheel ships them. Release archive
   contents are unchanged, and the archive's hook still runs the executable on
