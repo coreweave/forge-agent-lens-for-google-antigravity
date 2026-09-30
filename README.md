@@ -37,7 +37,7 @@ See Google's official [hook reference](https://antigravity.google/docs/hooks),
 ## Install
 
 ```bash
-uv tool install forge-agent-lens-for-google-antigravity && forge-agent-lens-for-google-antigravity install
+uv tool install forge-agent-lens-for-google-antigravity@latest && forge-agent-lens-for-google-antigravity install
 ```
 
 `install` registers the plugin bundled with the executable through
@@ -69,10 +69,10 @@ to that version:
 uv tool install forge-agent-lens-for-google-antigravity==X.Y.Z && forge-agent-lens-for-google-antigravity install
 ```
 
-`uv tool upgrade forge-agent-lens-for-google-antigravity` moves to the latest
-release; an unpinned `uv tool install` keeps the installed version. Rerun
-`install` after changing versions. Antigravity copies the plugin during
-installation, and installing over an existing plugin replaces it.
+`@latest` upgrades an existing install; a plain `uv tool install` keeps the
+installed version. Rerun `install` after changing versions.
+Antigravity copies the plugin during installation, and installing over an
+existing plugin replaces it.
 
 `install` needs 0.1.2 or newer. With 0.1.0 or 0.1.1, install the plugin from
 the latest release archive, which works with every version:
@@ -83,8 +83,8 @@ unzip -qo forge-agent-lens-for-google-antigravity-plugin.zip -d forge-agent-lens
 agy plugin install forge-agent-lens-plugin
 ```
 
-To try unreleased changes, run `uv tool install --reinstall .` in a checkout,
-then `forge-agent-lens-for-google-antigravity install`.
+To test unreleased changes, see
+[Test a change in Antigravity](CONTRIBUTING.md#test-a-change-in-antigravity).
 
 ## View traces
 

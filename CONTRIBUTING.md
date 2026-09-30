@@ -47,6 +47,26 @@ must not depend on a developer's W&B credentials, configuration, home directory,
 or external network services. The local smoke example exercises the real Forge
 SDK exporter against an in-process OTLP receiver.
 
+## Test a change in Antigravity
+
+Antigravity runs whichever `forge-agent-lens-for-google-antigravity` is first
+on `PATH`, so install the build under test as the uv tool, then rerun `install`.
+
+Development build: install this checkout in editable mode. Python edits take
+effect at the next Stop hook; rerun `install` after editing the plugin files,
+because Antigravity copies them.
+
+```bash
+uv tool install --editable . && forge-agent-lens-for-google-antigravity install
+```
+
+Released build: install from PyPI with `@latest` or a pinned version. A plain or
+`--upgrade` install leaves a checkout build in place.
+
+```bash
+uv tool install forge-agent-lens-for-google-antigravity@latest && forge-agent-lens-for-google-antigravity install
+```
+
 ## Pull requests
 
 Use a Conventional Commit title such as `fix: retry failed SDK flushes`.
