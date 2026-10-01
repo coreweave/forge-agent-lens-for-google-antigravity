@@ -38,7 +38,7 @@ uvx --from zizmor==1.30.1 zizmor --pedantic .
 uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint
 uv build
 uvx --from twine==7.0.0 twine check dist/*
-agy plugin validate plugin
+agy plugin validate src/forge_antigravity/plugin
 uv run python examples/local_smoke_test.py
 ```
 
@@ -46,6 +46,35 @@ Coverage must remain at or above 90% with branch measurement enabled. Tests
 must not depend on a developer's W&B credentials, configuration, home directory,
 or external network services. The local smoke example exercises the real Forge
 SDK exporter against an in-process OTLP receiver.
+
+## Test a change in Antigravity
+
+`install` points the hook at the build that ran it. Run from a checkout, it
+registers this checkout's `.venv` executable, so Python edits take effect at the
+next Stop hook. Rerun `install` after editing the plugin files, because
+Antigravity copies them.
+
+```bash
+uv run forge-agent-lens-for-google-antigravity install
+```
+
+To test a built wheel or a pushed branch, run the installer from it. The hook
+reruns the same source through `uvx`, and a git source stays pinned to the
+commit it resolved to:
+
+```bash
+uvx --from dist/forge_agent_lens_for_google_antigravity-X.Y.Z-py3-none-any.whl forge-agent-lens-for-google-antigravity install
+uvx --from git+https://github.com/coreweave/forge-agent-lens-for-google-antigravity@<branch> forge-agent-lens-for-google-antigravity install
+```
+
+Avoid `uvx --from .` for a checkout you're editing: uv caches that build and
+doesn't rebuild it when Python files change.
+
+Released build: run the installer from PyPI with `@latest` or a pinned version.
+
+```bash
+uvx forge-agent-lens-for-google-antigravity@latest install
+```
 
 ## Pull requests
 

@@ -200,6 +200,10 @@ def main() -> int:
                 )
             if json.loads(completed.stdout) != {"decision": "allow"}:
                 raise RuntimeError(f"unexpected hook response: {completed.stdout.strip()}")
+            if "/local/smoke-test/weave/agents/conversations/local-smoke-test" not in (
+                completed.stderr
+            ):
+                raise RuntimeError(f"hook did not log a trace link: {completed.stderr.strip()}")
             request = ExportTraceServiceRequest.FromString(requests.get(timeout=5))
 
     spans = [
@@ -237,6 +241,7 @@ def main() -> int:
     print("Local hook-to-OTLP smoke test passed.")
     print(f"Captured {len(names)} spans: {', '.join(names)}")
     print("Validated Forge and Antigravity trace attributes.")
+    print("Logged the Agent Lens conversation link.")
     return 0
 
 

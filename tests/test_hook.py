@@ -6,6 +6,15 @@ import json
 import pytest
 
 from forge_antigravity import hook
+from forge_antigravity.exporter import ExportSummary
+
+
+def _recording_export(captured: dict[str, object]):
+    def export(payload: dict[str, object], **kwargs: object) -> ExportSummary:
+        captured.update(kwargs)
+        return ExportSummary(turns=0, spans=0, last_step=-1, conversation_id="conversation-1")
+
+    return export
 
 
 def test_main_always_prints_valid_neutral_json(monkeypatch, capsys) -> None:
@@ -18,16 +27,48 @@ def test_main_always_prints_valid_neutral_json(monkeypatch, capsys) -> None:
     assert "invalid hook input" in captured.err
 
 
-def test_unconfigured_and_non_idle_stops_do_not_export(monkeypatch) -> None:
+def test_unconfigured_and_non_idle_stops_do_not_export(monkeypatch, capsys) -> None:
     calls: list[object] = []
     monkeypatch.setattr(hook, "export_pending_turns", lambda *args, **kwargs: calls.append(args))
 
-    monkeypatch.delenv("FORGE_TRACE_PROJECT", raising=False)
+    assert hook.handle_hook({"fullyIdle": False}) == {"decision": "allow"}
+    assert capsys.readouterr().err == ""
     assert hook.handle_hook({"fullyIdle": True}) == {"decision": "allow"}
+    assert capsys.readouterr().err == (
+        "forge-agent-lens-for-google-antigravity: "
+        "FORGE_TRACE_PROJECT is not set, so this turn was not exported\n"
+    )
     monkeypatch.setenv("FORGE_TRACE_PROJECT", "team/project")
     assert hook.handle_hook({"fullyIdle": False}) == {"decision": "allow"}
 
     assert calls == []
+
+
+@pytest.mark.parametrize(
+    ("turns", "expected"),
+    [
+        (
+            1,
+            "forge-agent-lens-for-google-antigravity: View traces: "
+            "https://wandb.ai/team/project/weave/agents/conversations/conversation-1\n",
+        ),
+        (0, ""),
+    ],
+)
+def test_exported_turns_log_a_link_to_the_conversation(
+    turns: int, expected: str, monkeypatch, capsys
+) -> None:
+    monkeypatch.setenv("FORGE_TRACE_PROJECT", "team/project")
+    monkeypatch.setattr(
+        hook,
+        "export_pending_turns",
+        lambda payload, **kwargs: ExportSummary(
+            turns=turns, spans=4 * turns, last_step=8, conversation_id="conversation-1"
+        ),
+    )
+
+    assert hook.handle_hook({"fullyIdle": True}) == {"decision": "allow"}
+    assert capsys.readouterr().err == expected
 
 
 @pytest.mark.parametrize("value", ["0", "false", "NO", "off"])
@@ -35,11 +76,7 @@ def test_content_capture_can_be_disabled(value: str, monkeypatch) -> None:
     captured: dict[str, object] = {}
     monkeypatch.setenv("FORGE_TRACE_PROJECT", "team/project")
     monkeypatch.setenv("FORGE_ANTIGRAVITY_INCLUDE_CONTENT", value)
-    monkeypatch.setattr(
-        hook,
-        "export_pending_turns",
-        lambda payload, **kwargs: captured.update(kwargs),
-    )
+    monkeypatch.setattr(hook, "export_pending_turns", _recording_export(captured))
 
     assert hook.handle_hook({"fullyIdle": True}) == {"decision": "allow"}
     assert captured["project"] == "team/project"
@@ -51,11 +88,7 @@ def test_export_defaults_to_content_capture(monkeypatch) -> None:
     captured: dict[str, object] = {}
     monkeypatch.setenv("FORGE_TRACE_PROJECT", " team/project ")
     monkeypatch.delenv("FORGE_ANTIGRAVITY_INCLUDE_CONTENT", raising=False)
-    monkeypatch.setattr(
-        hook,
-        "export_pending_turns",
-        lambda payload, **kwargs: captured.update(kwargs),
-    )
+    monkeypatch.setattr(hook, "export_pending_turns", _recording_export(captured))
 
     hook.handle_hook({"fullyIdle": True})
 

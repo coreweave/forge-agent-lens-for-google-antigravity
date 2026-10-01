@@ -7,14 +7,18 @@ from datetime import datetime, timezone
 from typing import Any
 
 from forge_antigravity.exporter import export_pending_turns
+from forge_antigravity.links import agents_url
 
 _NEUTRAL_RESPONSE = {"decision": "allow"}
 _FALSE_VALUES = {"0", "false", "no", "off"}
 
 
 def handle_hook(payload: dict[str, Any]) -> dict[str, str]:
+    if payload.get("fullyIdle") is not True:
+        return _NEUTRAL_RESPONSE
     project = os.environ.get("FORGE_TRACE_PROJECT", "").strip()
-    if payload.get("fullyIdle") is not True or not project:
+    if not project:
+        _log("FORGE_TRACE_PROJECT is not set, so this turn was not exported")
         return _NEUTRAL_RESPONSE
 
     include_content = (
@@ -22,7 +26,7 @@ def handle_hook(payload: dict[str, Any]) -> dict[str, str]:
         not in _FALSE_VALUES
     )
     try:
-        export_pending_turns(
+        summary = export_pending_turns(
             payload,
             project=project,
             include_content=include_content,
@@ -30,6 +34,9 @@ def handle_hook(payload: dict[str, Any]) -> dict[str, str]:
         )
     except Exception as error:
         _log(f"trace export failed: {type(error).__name__}: {error}")
+        return _NEUTRAL_RESPONSE
+    if summary.turns and (url := agents_url(project, summary.conversation_id)):
+        _log(f"View traces: {url}")
     return _NEUTRAL_RESPONSE
 
 

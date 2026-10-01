@@ -18,8 +18,9 @@ trace-query client, or transport implementation. The CoreWeave Forge SDK
 (`coreweave==0.1.0b0`, installed from PyPI) owns W&B credential discovery,
 endpoint selection, OpenTelemetry encoding, export, flushing, and shutdown.
 
-The installed `forge-agent-lens-for-google-antigravity` executable is the
-plugin's stdin/stdout hook entrypoint, not a user-facing CLI.
+The `forge-agent-lens-for-google-antigravity` executable is the plugin's Stop
+hook: with no arguments it reads a hook payload on stdin. Its `install` command
+registers the plugin with Antigravity.
 
 ## Requirements
 
@@ -27,7 +28,7 @@ plugin's stdin/stdout hook entrypoint, not a user-facing CLI.
 - Python 3.10 or newer.
 - Antigravity CLI 1.1.10 or newer; the current release is recommended.
 - A W&B API key and destination in `entity/project` form.
-- [`uv`](https://docs.astral.sh/uv/) to install the hook executable.
+- [`uv`](https://docs.astral.sh/uv/), which runs the hook through `uvx`.
 
 See Google's official [hook reference](https://antigravity.google/docs/hooks),
 [plugin documentation](https://antigravity.google/docs/plugins?tab=cli), and
@@ -35,22 +36,25 @@ See Google's official [hook reference](https://antigravity.google/docs/hooks),
 
 ## Install
 
-Install the hook executable from PyPI and the plugin from the latest GitHub
-release:
-
 ```bash
-uv tool install forge-agent-lens-for-google-antigravity
-command -v forge-agent-lens-for-google-antigravity
-curl -fsSLO https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip
-unzip -qo forge-agent-lens-for-google-antigravity-plugin.zip -d forge-agent-lens-plugin
-agy plugin validate forge-agent-lens-plugin
-agy plugin install forge-agent-lens-plugin
+uvx forge-agent-lens-for-google-antigravity@latest install
 ```
 
-The executable must be on `PATH` in the environment that launches Antigravity.
+`install` registers the bundled plugin through `agy plugin install`, with a
+Stop hook that runs this exact version through `uvx`, then checks what the hook
+needs and prints where traces will appear:
 
-Set the destination in the environment that launches Antigravity. The Forge SDK
-reads `WANDB_API_KEY` directly or resolves it from the W&B entry in `.netrc`.
+```text
+Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity X.Y.Z).
+✓ Hook command         uvx forge-agent-lens-for-google-antigravity@X.Y.Z
+✓ FORGE_TRACE_PROJECT  my-team/antigravity-traces
+✓ W&B API key          WANDB_API_KEY
+View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents
+```
+
+`uvx` must be on `PATH` in the environment that launches Antigravity. Set the
+destination there too. The Forge SDK reads `WANDB_API_KEY` directly or
+resolves it from the W&B entry in `.netrc`.
 
 ```bash
 export FORGE_TRACE_PROJECT=entity/project
@@ -58,16 +62,52 @@ export WANDB_API_KEY=...
 agy
 ```
 
-Antigravity copies the plugin during installation. To upgrade, upgrade the
-executable, then rerun the `curl`, `unzip`, and `agy plugin install` commands
-above; installing over an existing plugin replaces it:
+To install a specific version, pin it. This also switches an existing install
+to that version:
 
 ```bash
-uv tool upgrade forge-agent-lens-for-google-antigravity
+uvx forge-agent-lens-for-google-antigravity@X.Y.Z install
 ```
 
-To try unreleased changes, run `uv tool install --reinstall .` in a checkout and
-install the plugin from its `plugin/` directory.
+Rerun the `@latest` command to upgrade. Antigravity copies the plugin during
+installation, and installing over an existing plugin replaces it. Running
+`install` through `uvx` caches that version, so the first Stop hook doesn't
+download it. Afterwards, a `uv tool` install from 0.1.0 or 0.1.1 is no longer
+used; remove it with `uv tool uninstall forge-agent-lens-for-google-antigravity`.
+
+`install` needs 0.1.2 or newer. For 0.1.0 or 0.1.1, install the executable with
+`uv tool install forge-agent-lens-for-google-antigravity==X.Y.Z`, then the
+plugin from the latest release archive. The archive's hook runs the executable
+on `PATH`, so it works with every version:
+
+```bash
+curl -fsSLO https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip
+unzip -qo forge-agent-lens-for-google-antigravity-plugin.zip -d forge-agent-lens-plugin
+agy plugin install forge-agent-lens-plugin
+```
+
+To test unreleased changes, see
+[Test a change in Antigravity](CONTRIBUTING.md#test-a-change-in-antigravity).
+
+## View traces
+
+Traces appear in W&B under `https://wandb.ai/<entity>/<project>/weave/agents`,
+where `entity/project` is `FORGE_TRACE_PROJECT`. For a dedicated or
+self-managed instance, links follow `WANDB_BASE_URL`, or `WANDB_APP_URL` when
+set. After each exported turn, the hook logs a link to that conversation:
+
+```text
+forge-agent-lens-for-google-antigravity: View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents/conversations/<conversation-id>
+```
+
+Antigravity shows hook output neither in its terminal UI nor in `agy -p`
+output. It writes the hook's stderr to its CLI logs, so conversation links,
+export errors, and the warning logged when `FORGE_TRACE_PROJECT` is unset are
+all there:
+
+```bash
+grep -h "JSON hook command stderr" ~/.gemini/antigravity-cli/log/cli-*.log | tail
+```
 
 ## How export works
 
@@ -122,6 +162,7 @@ for retry.
 | `WANDB_API_KEY` | Forge SDK | W&B authentication; `.netrc` is also supported |
 | `WANDB_BASE_URL` | Forge SDK | W&B base URL for endpoint derivation |
 | `WF_TRACE_SERVER_URL` | Forge SDK | Explicit trace-server override |
+| `WANDB_APP_URL` | adapter | W&B app URL for trace links; derived from `WANDB_BASE_URL` by default |
 
 Content capture defaults to enabled. For sensitive workspaces, set:
 
@@ -162,7 +203,7 @@ uvx --from zizmor==1.30.1 zizmor --pedantic .
 uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint
 uv build
 uvx --from twine==7.0.0 twine check dist/*
-agy plugin validate plugin
+agy plugin validate src/forge_antigravity/plugin
 ```
 
 To test against a local Forge SDK checkout without changing the lockfile:

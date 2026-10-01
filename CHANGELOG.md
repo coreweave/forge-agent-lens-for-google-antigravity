@@ -3,6 +3,32 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] - 2026-09-29
+
+### Added
+
+- `uvx forge-agent-lens-for-google-antigravity@latest install` registers the
+  plugin through `agy plugin install`, checks `uvx`, the destination, and the
+  W&B API key, and prints the project's Agent Lens link. Pin a version with
+  `@X.Y.Z`.
+- `forge-agent-lens-for-google-antigravity --version`.
+- The hook logs a link to the conversation after each exported turn, and logs
+  a warning instead of exiting silently when `FORGE_TRACE_PROJECT` is unset.
+
+### Changed
+
+- When run from a terminal without a command, the executable prints usage and
+  exits instead of waiting for a hook payload on stdin.
+- A plugin registered by `install` runs its Stop hook as
+  `uvx forge-agent-lens-for-google-antigravity@X.Y.Z`, so the executable no
+  longer needs to be installed on `PATH`. Run from an editable checkout,
+  `install` points the hook at the checkout's executable; run through
+  `uvx --from <path or URL>`, the hook reruns that source.
+- The plugin files moved from `plugin/` into the Python package
+  (`src/forge_antigravity/plugin/`) so the wheel ships them. Release archive
+  contents are unchanged, and the archive's hook still runs the executable on
+  `PATH`.
+
 ## [0.1.1] - 2026-09-29
 
 ### Changed
@@ -40,5 +66,6 @@ All notable changes to this project are documented here. The project follows
 - Token usage, exact model request settings, response IDs, and delegated
   sub-agent internals are not exposed by the transcript and are not synthesized.
 
+[0.1.2]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.2
 [0.1.1]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.1
 [0.1.0]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/tag/v0.1.0

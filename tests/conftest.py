@@ -9,6 +9,7 @@ def isolate_environment(monkeypatch) -> None:
         "FORGE_ANTIGRAVITY_INCLUDE_CONTENT",
         "FORGE_TRACE_PROJECT",
         "WANDB_API_KEY",
+        "WANDB_APP_URL",
         "WANDB_BASE_URL",
         "WF_TRACE_SERVER_URL",
     ):
