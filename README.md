@@ -5,10 +5,9 @@
 [![license](https://img.shields.io/pypi/l/forge-agent-lens-for-google-antigravity.svg)](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/LICENSE)
 [![python](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcoreweave%2Fforge-agent-lens-for-google-antigravity%2Fmain%2Fpyproject.toml)](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/pyproject.toml)
 
-Google Antigravity™ [plugin](https://antigravity.google/docs/plugins?tab=cli)
-that sends traces of agent turns, model calls, tool calls, and subagents to
-[Agent Lens](https://docs.coreweave.com/products/agent-lens/what-is-agent-lens)
-in CoreWeave Forge.
+[CoreWeave Forge Agent Lens](https://docs.coreweave.com/products/agent-lens/what-is-agent-lens)
+plugin for Google Antigravity™ that traces agent turns, model calls, tool
+calls, and subagents.
 
 When a turn finishes, the plugin's [Stop hook](https://antigravity.google/docs/hooks)
 reads the conversation transcript and sends the turn to Agent Lens as one trace. Turns from the same Antigravity
@@ -170,7 +169,8 @@ a version, or switch to one, install from that version:
 uvx forge-agent-lens-for-google-antigravity@X.Y.Z install
 ```
 
-Disable, re-enable, or remove the plugin with `agy`:
+Disable, re-enable, or remove the plugin with
+[`agy plugin`](https://antigravity.google/docs/plugins?tab=cli):
 
 ```bash
 agy plugin disable forge-agent-lens-for-google-antigravity
