@@ -10,9 +10,9 @@ plugin for Google Antigravity™ that traces agent turns, model calls, tool
 calls, and subagents.
 
 When a turn finishes, the plugin's [Stop hook](https://antigravity.google/docs/hooks)
-reads the conversation transcript and sends the turn to Agent Lens as one trace. Turns from the same Antigravity
-conversation share a conversation ID, so Agent Lens shows them as one
-conversation.
+reads the conversation transcript and sends the turn to Agent Lens as one
+trace. Turns from the same Antigravity conversation share a conversation ID, so
+Agent Lens shows them as one conversation.
 
 > [!WARNING]
 > Content capture is on by default. Prompts, responses, reasoning, and tool
