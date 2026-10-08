@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.4](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/compare/v0.1.3...v0.1.4) (2026-10-08)
+
+
+### Documentation
+
+* add a Releases section to the README ([#7](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/issues/7)) ([41b1b43](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/commit/41b1b43dd8ea4b2baff4906ed1373199339aaa6b))
+
 ## [0.1.3](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/compare/v0.1.2...v0.1.3) (2026-10-08)
 
 
