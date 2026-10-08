@@ -111,21 +111,7 @@ invoke_agent Antigravity     the turn, from your request until the agent stops
 
 Spans use the standard OpenTelemetry GenAI (`gen_ai.*`) attributes and are
 timed from the transcript's step timestamps. Conversations are named after the
-first workspace folder. Every span also carries:
-
-| Attribute | Value |
-|---|---|
-| `forge.integration.name` | `antigravity` |
-| `forge.integration.version` | Plugin version |
-| `forge.integration.antigravity.workspace.paths` | Workspace paths from the hook |
-| `forge.integration.antigravity.execution.number` | Stop hook execution number |
-| `forge.integration.antigravity.termination.reason` | Why the agent stopped |
-
-The plugin uses the [CoreWeave Forge SDK](https://pypi.org/project/coreweave/)
-(`coreweave`, pinned to the `0.1.0b0` prerelease) for authentication and
-export. The OTLP resource reports
-`service.name = forge-agent-lens-for-google-antigravity` and
-`wandb.sdk.name = forge`.
+first workspace folder.
 
 ### When turns are exported
 
