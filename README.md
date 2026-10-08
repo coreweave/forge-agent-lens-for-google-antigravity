@@ -48,7 +48,7 @@ Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity X.Y.Z)
 ✓ Hook command         uvx forge-agent-lens-for-google-antigravity@X.Y.Z
 ✓ FORGE_TRACE_PROJECT  my-team/antigravity-traces
 ✓ W&B API key          WANDB_API_KEY
-View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents
+View traces: https://forge.coreweave.com/wandb/my-team/antigravity-traces/weave/agents
 ```
 
 The hook runs with the environment that `agy` was started in, so set
@@ -65,7 +65,7 @@ Then start a new `agy` session. Each finished turn appears in Agent Lens.
 hook also logs a link to that conversation:
 
 ```text
-forge-agent-lens-for-google-antigravity: View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents/conversations/<conversation-id>
+forge-agent-lens-for-google-antigravity: View traces: https://forge.coreweave.com/wandb/my-team/antigravity-traces/weave/agents/conversations/<conversation-id>
 ```
 
 Antigravity doesn't show hook output in its terminal UI or in `agy -p` output.

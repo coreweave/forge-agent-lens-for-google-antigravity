@@ -50,7 +50,7 @@ def test_unconfigured_and_non_idle_stops_do_not_export(monkeypatch, capsys) -> N
         (
             1,
             "forge-agent-lens-for-google-antigravity: View traces: "
-            "https://wandb.ai/team/project/weave/agents/conversations/conversation-1\n",
+            "https://forge.coreweave.com/wandb/team/project/weave/agents/conversations/conversation-1\n",
         ),
         (0, ""),
     ],

@@ -110,7 +110,7 @@ def test_install_registers_the_bundled_plugin_and_reports_a_ready_setup(
         + f"✓ Hook command         {HOOK_COMMAND}\n"
         + "✓ FORGE_TRACE_PROJECT  my-team/antigravity-traces\n"
         + "✓ W&B API key          WANDB_API_KEY\n"
-        + "View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents\n"
+        + "View traces: https://forge.coreweave.com/wandb/my-team/antigravity-traces/weave/agents\n"
     )
 
 

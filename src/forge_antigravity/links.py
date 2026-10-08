@@ -16,10 +16,12 @@ def agents_url(project: str, conversation_id: str = "") -> str | None:
 
 
 def _app_url() -> str:
-    # Same API-to-app host mapping as wandb.util.app_url.
+    # Same API-to-app host mapping as wandb.util.app_url, except that W&B cloud moved to Forge.
     if app_url := os.environ.get("WANDB_APP_URL", "").strip("/"):
         return app_url
     api_url = (os.environ.get("WANDB_BASE_URL") or "https://api.wandb.ai").rstrip("/")
+    if api_url == "https://api.wandb.ai":
+        return "https://forge.coreweave.com/wandb"
     if "://api.wandb." in api_url and "://api.wandb.test" not in api_url:
         return api_url.replace("://api.", "://")
     return api_url.replace("://api.", "://app.")
