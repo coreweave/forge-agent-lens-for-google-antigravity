@@ -185,6 +185,12 @@ OTLP receiver, without contacting any external service. See
 [CONTRIBUTING.md][contributing] for the full set of checks and for
 [testing a change in Antigravity][test-in-antigravity].
 
+## Releases
+
+Merge the release-please `chore(main): release X.Y.Z` pull request to tag and
+publish to PyPI. See [CONTRIBUTING.md][contributing-releases] for versioning
+and fixing a failed release.
+
 ## Contributing
 
 See [CONTRIBUTING.md][contributing]. Contributions require agreeing to the
@@ -203,6 +209,7 @@ with, sponsored by, or endorsed by Google.
 [changelog]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CHANGELOG.md
 [cla]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CLA.md
 [contributing]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md
+[contributing-releases]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md#releases
 [license]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/LICENSE
 [security]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/SECURITY.md
 [test-in-antigravity]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md#test-a-change-in-antigravity
