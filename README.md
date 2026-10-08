@@ -187,10 +187,19 @@ OTLP receiver, without contacting any external service. See
 
 ## Releases
 
-To release, merge the `chore(main): release X.Y.Z` pull request that
-release-please keeps open. That tags `vX.Y.Z` and publishes to PyPI. If
-publishing fails, rerun it with `gh workflow run release.yml --ref vX.Y.Z`;
-never move a tag. See [CONTRIBUTING.md][contributing-releases].
+release-please keeps a `chore(main): release X.Y.Z` pull request open with the
+version bump and changelog. Merging it tags `vX.Y.Z` and runs `release.yml`,
+which publishes to PyPI and attaches the artifacts to the GitHub release.
+
+- Before 1.0, `feat` and `fix` both bump the patch version. To choose the
+  version, add a `Release-As: X.Y.Z` footer to a commit.
+- If `release.yml` fails on a transient error, rerun only the failed jobs:
+  `gh run list --workflow release.yml` for the run ID, then
+  `gh run rerun <run-id> --failed`.
+- If it fails because of a bug, fix it in a pull request to `main` and release
+  the next version. Never move a tag; PyPI rejects a version it already has.
+
+See [CONTRIBUTING.md][contributing-releases] for the full flow.
 
 ## Contributing
 
