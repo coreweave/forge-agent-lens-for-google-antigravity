@@ -185,6 +185,24 @@ OTLP receiver, without contacting any external service. See
 [CONTRIBUTING.md][contributing] for the full set of checks and for
 [testing a change in Antigravity][test-in-antigravity].
 
+## Releases
+
+Releases are cut by [release-please](https://github.com/googleapis/release-please):
+
+1. Merge pull requests to `main` with Conventional Commit titles. Before 1.0,
+   `feat` and `fix` both bump the patch version. To choose the version, add a
+   `Release-As: X.Y.Z` footer to a commit.
+2. release-please keeps a `chore(main): release X.Y.Z` pull request open with
+   the version bump and the changelog. Approve and merge it.
+3. The merge tags `vX.Y.Z`, creates the GitHub release, and runs the release
+   workflow. The workflow reruns the checks, publishes to PyPI, and attaches
+   the wheel, sdist, plugin archives, and SHA-256 checksums to the release.
+
+If the release workflow fails after the tag exists, fix the cause and rerun it
+on the same tag with `gh workflow run release.yml --ref vX.Y.Z`. Never move a
+tag; PyPI rejects re-uploads of a version. See
+[CONTRIBUTING.md][contributing-releases] for details.
+
 ## Contributing
 
 See [CONTRIBUTING.md][contributing]. Contributions require agreeing to the
@@ -203,6 +221,7 @@ with, sponsored by, or endorsed by Google.
 [changelog]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CHANGELOG.md
 [cla]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CLA.md
 [contributing]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md
+[contributing-releases]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md#releases
 [license]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/LICENSE
 [security]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/SECURITY.md
 [test-in-antigravity]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md#test-a-change-in-antigravity
