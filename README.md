@@ -187,21 +187,10 @@ OTLP receiver, without contacting any external service. See
 
 ## Releases
 
-Releases are cut by [release-please](https://github.com/googleapis/release-please):
-
-1. Merge pull requests to `main` with Conventional Commit titles. Before 1.0,
-   `feat` and `fix` both bump the patch version. To choose the version, add a
-   `Release-As: X.Y.Z` footer to a commit.
-2. release-please keeps a `chore(main): release X.Y.Z` pull request open with
-   the version bump and the changelog. Approve and merge it.
-3. The merge tags `vX.Y.Z`, creates the GitHub release, and runs the release
-   workflow. The workflow reruns the checks, publishes to PyPI, and attaches
-   the wheel, sdist, plugin archives, and SHA-256 checksums to the release.
-
-If the release workflow fails after the tag exists, fix the cause and rerun it
-on the same tag with `gh workflow run release.yml --ref vX.Y.Z`. Never move a
-tag; PyPI rejects re-uploads of a version. See
-[CONTRIBUTING.md][contributing-releases] for details.
+To release, merge the `chore(main): release X.Y.Z` pull request that
+release-please keeps open. That tags `vX.Y.Z` and publishes to PyPI. If
+publishing fails, rerun it with `gh workflow run release.yml --ref vX.Y.Z`;
+never move a tag. See [CONTRIBUTING.md][contributing-releases].
 
 ## Contributing
 
