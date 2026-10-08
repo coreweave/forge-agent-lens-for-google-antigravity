@@ -6,7 +6,7 @@
 [![python](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcoreweave%2Fforge-agent-lens-for-google-antigravity%2Fmain%2Fpyproject.toml)](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/pyproject.toml)
 
 [CoreWeave Forge Agent Lens](https://docs.coreweave.com/products/agent-lens/what-is-agent-lens)
-plugin for Google Antigravity™ that traces agent turns, model calls, tool
+plugin for Google Antigravity that traces agent turns, model calls, tool
 calls, and subagents.
 
 When a turn finishes, the plugin's [Stop hook](https://antigravity.google/docs/hooks)
