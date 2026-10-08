@@ -8,10 +8,10 @@ from forge_antigravity.links import agents_url
 @pytest.mark.parametrize(
     ("environment", "expected"),
     [
-        ({}, "https://forge.coreweave.com/wandb/my-team/antigravity-traces/weave/agents"),
+        ({}, "https://wandb.ai/my-team/antigravity-traces/weave/agents"),
         (
             {"WANDB_BASE_URL": "https://api.wandb.ai/"},
-            "https://forge.coreweave.com/wandb/my-team/antigravity-traces/weave/agents",
+            "https://wandb.ai/my-team/antigravity-traces/weave/agents",
         ),
         (
             {"WANDB_BASE_URL": "https://example.wandb.io"},
@@ -45,8 +45,7 @@ def test_agents_url_follows_the_wandb_app_host(
 
 def test_agents_url_links_a_conversation() -> None:
     assert agents_url(" my-team / antigravity-traces ", "conversation 1") == (
-        "https://forge.coreweave.com/wandb/my-team/antigravity-traces"
-        "/weave/agents/conversations/conversation%201"
+        "https://wandb.ai/my-team/antigravity-traces/weave/agents/conversations/conversation%201"
     )
 
 
