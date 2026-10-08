@@ -108,4 +108,10 @@ PyPI through trusted publishing, and attaches them to the GitHub release with
 the plugin archives and SHA-256 checksums. To choose the version, add a
 `Release-As: X.Y.Z` footer to a commit.
 
+If the release workflow fails on a transient error, rerun only the failed jobs:
+find the run ID with `gh run list --workflow release.yml`, then run
+`gh run rerun <run-id> --failed`. Rerunning a job that already published fails,
+because PyPI rejects a version it already has. If it fails because of a bug,
+fix it in a pull request to `main` and release the next version.
+
 Never reuse or move an existing release tag.
