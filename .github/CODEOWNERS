@@ -1,2 +1,3 @@
-# The W&B engineering team reviews all integration and release changes.
-* @coreweave/cc-w-b-engineering
+# Auto-request review from the Weave SDK team on every PR.
+# Takes effect only from the default branch (main).
+* @coreweave/weave-sdk
