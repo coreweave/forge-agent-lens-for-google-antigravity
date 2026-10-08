@@ -223,7 +223,7 @@ def main() -> int:
         raise RuntimeError(f"missing expected spans: {', '.join(sorted(missing))}")
 
     expected_attributes = {
-        "forge.integration.name": "antigravity",
+        "forge.integration.name": "forge-agent-lens-for-google-antigravity",
         "forge.integration.version": __version__,
         "forge.integration.antigravity.execution.number": 1,
         "forge.integration.antigravity.termination.reason": "model_stop",
