@@ -105,8 +105,9 @@ from the Conventional Commits on `main`. The version changes in
 the PR tags `vX.Y.Z`, creates the GitHub release, and runs the release
 workflow. That workflow reruns the checks, publishes the wheel and sdist to
 PyPI through trusted publishing, and attaches them to the GitHub release with
-the plugin archives and SHA-256 checksums. To choose the version, add a
-`Release-As: X.Y.Z` footer to a commit.
+the plugin archives and SHA-256 checksums. Before 1.0, `feat` and `fix` both
+bump the patch version. To choose the version, add a `Release-As: X.Y.Z` footer
+to a commit.
 
 If the release workflow fails on a transient error, rerun only the failed jobs:
 find the run ID with `gh run list --workflow release.yml`, then run
