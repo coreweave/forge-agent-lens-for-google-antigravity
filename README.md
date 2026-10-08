@@ -131,9 +131,9 @@ permissions, or tool results.
 
 - Antigravity's transcript doesn't record token usage, model request settings,
   or response IDs, so traces have no token counts or costs.
-- A subagent appears as one `invoke_agent` span with its prompt and result.
-  Its own model and tool calls aren't in the parent conversation's transcript,
-  so they don't appear under that span.
+- A subagent's `invoke_agent` span, under the turn's root span, has its prompt
+  and result but no child spans. The transcript doesn't record the subagent's
+  own model and tool calls.
 
 ## Troubleshooting
 
