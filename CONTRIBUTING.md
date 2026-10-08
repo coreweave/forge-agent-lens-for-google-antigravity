@@ -78,10 +78,11 @@ uvx forge-agent-lens-for-google-antigravity@latest install
 
 ## Pull requests
 
-Use a Conventional Commit title such as `fix: retry failed SDK flushes`.
-Call out privacy or compatibility changes in the pull request description, and
-update the README and changelog when user-visible behavior changes. Do not
-commit generated build artifacts or local configuration.
+Use Conventional Commit titles, such as `fix: retry failed SDK flushes`, for
+pull requests and commits. release-please writes the changelog from them, so
+don't edit `CHANGELOG.md` by hand. Call out privacy or compatibility changes in
+the pull request description, and update the README when user-visible behavior
+changes. Do not commit generated build artifacts or local configuration.
 
 ## Contributor License Agreement
 
@@ -98,13 +99,13 @@ This project is licensed under Apache-2.0 (see [`LICENSE`](./LICENSE)) and follo
 
 ## Releases
 
-1. Update `CHANGELOG.md` and both version declarations in `pyproject.toml` and
-   `src/forge_antigravity/__init__.py`.
-2. Run the full local validation list above.
-3. Merge the release commit to `main` and create an annotated `v<version>` tag.
-4. Push the tag. The release workflow verifies the version, reruns checks,
-   builds Python and plugin artifacts, generates SHA-256 checksums, publishes
-   the wheel and sdist to PyPI through trusted publishing, and then creates the
-   GitHub release.
+release-please keeps a release PR open that bumps the version and changelog
+from the Conventional Commits on `main`. The version changes in
+`pyproject.toml`, `src/forge_antigravity/__init__.py`, and `uv.lock`. Merging
+the PR tags `vX.Y.Z`, creates the GitHub release, and runs the release
+workflow. That workflow reruns the checks, publishes the wheel and sdist to
+PyPI through trusted publishing, and attaches them to the GitHub release with
+the plugin archives and SHA-256 checksums. To choose the version, add a
+`Release-As: X.Y.Z` footer to a commit.
 
 Never reuse or move an existing release tag.

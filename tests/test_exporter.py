@@ -109,7 +109,7 @@ def test_export_builds_forge_conversation_and_checkpoints(tmp_path: Path, monkey
     assert logged[0]["agent_name"] == "Antigravity"
     assert logged[0]["agent_version"] == __version__
     assert logged[0]["attributes"] == {
-        "forge.integration.name": "antigravity",
+        "forge.integration.name": "forge-agent-lens-for-google-antigravity",
         "forge.integration.version": __version__,
         "forge.integration.antigravity.workspace.paths": ["/workspace/demo"],
         "forge.integration.antigravity.execution.number": 3,
@@ -430,7 +430,9 @@ def test_real_forge_sdk_exports_otlp_and_checkpoints_latest_turn(
         assert root.span_id.hex() == summary.root_span_ids[0]
         assert otel_attribute(root, "gen_ai.agent.version") == __version__
         assert all(
-            otel_attribute(span, "forge.integration.name") == "antigravity" for span in spans
+            otel_attribute(span, "forge.integration.name")
+            == "forge-agent-lens-for-google-antigravity"
+            for span in spans
         )
         assert all(
             otel_attribute(span, "forge.integration.version") == __version__ for span in spans

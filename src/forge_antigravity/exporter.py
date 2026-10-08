@@ -81,7 +81,7 @@ def export_pending_turns(
         else []
     )
     attributes: dict[str, Any] = {
-        "forge.integration.name": "antigravity",
+        "forge.integration.name": "forge-agent-lens-for-google-antigravity",
         "forge.integration.version": __version__,
     }
     if workspace_paths:

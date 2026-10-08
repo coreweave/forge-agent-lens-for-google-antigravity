@@ -1,9 +1,9 @@
 name: Release
 
+# Release Please dispatches this on each release tag:
+# gh workflow run release.yml --ref vX.Y.Z
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -48,6 +48,10 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then
+            echo "::error::Run this workflow from a release tag, not $GITHUB_REF_TYPE $RELEASE_TAG"
+            exit 1
+          fi
           PACKAGE_VERSION="$(uv run --no-sync python -c 'from forge_antigravity import __version__; print(__version__)')"
           PYPROJECT_VERSION="$(uv run --no-sync python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           test "$PACKAGE_VERSION" = "$PYPROJECT_VERSION"
@@ -114,11 +118,11 @@ jobs:
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
 
   github-release:
-    name: Create GitHub release
+    name: Attach artifacts to the GitHub release
     needs: publish-pypi
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to create the GitHub release and upload its artifacts.
+      contents: write # Required to upload artifacts to the GitHub release.
     steps:
       - name: Download release artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -126,13 +130,9 @@ jobs:
           path: dist
           merge-multiple: true
 
-      - name: Create GitHub release
+      - name: Upload artifacts to the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          gh release create "$RELEASE_TAG" dist/* \
-            --generate-notes \
-            --title "Forge Agent Lens for Google Antigravity $RELEASE_TAG" \
-            --verify-tag
+        run: gh release upload "$RELEASE_TAG" dist/*

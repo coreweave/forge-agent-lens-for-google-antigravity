@@ -1,48 +1,47 @@
 # Forge Agent Lens for Google Antigravity
 
+[![PyPI version](https://img.shields.io/pypi/v/forge-agent-lens-for-google-antigravity.svg)](https://pypi.org/project/forge-agent-lens-for-google-antigravity/)
 [![CI](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/actions/workflows/ci.yml/badge.svg)](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/actions/workflows/ci.yml)
+[![license](https://img.shields.io/pypi/l/forge-agent-lens-for-google-antigravity.svg)](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/LICENSE)
+[![python](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fcoreweave%2Fforge-agent-lens-for-google-antigravity%2Fmain%2Fpyproject.toml)](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/pyproject.toml)
 
-Forge Agent Lens tracing for the Google Antigravity™ coding harness. When an
-agent turn becomes fully idle, the plugin translates its transcript into typed
-Forge agent spans.
+[CoreWeave Forge Agent Lens](https://docs.coreweave.com/products/agent-lens/what-is-agent-lens)
+plugin for Google Antigravity that traces agent turns, model calls, tool
+calls, and subagents.
 
-```text
-Antigravity Stop hook + transcript
-  -> Forge Turn, LLM, Tool, and SubAgent models
-  -> Forge SDK OpenTelemetry exporter
-  -> Agent Lens
-```
+When a turn finishes, the plugin's [Stop hook](https://antigravity.google/docs/hooks)
+reads the conversation transcript and sends the turn to Agent Lens as one
+trace. Turns from the same Antigravity conversation share a conversation ID, so
+Agent Lens shows them as one conversation.
 
-This repository is only the Antigravity adapter. It has no Agent Lens client,
-trace-query client, or transport implementation. The CoreWeave Forge SDK
-(`coreweave==0.1.0b0`, installed from PyPI) owns W&B credential discovery,
-endpoint selection, OpenTelemetry encoding, export, flushing, and shutdown.
-
-The `forge-agent-lens-for-google-antigravity` executable is the plugin's Stop
-hook: with no arguments it reads a hook payload on stdin. Its `install` command
-registers the plugin with Antigravity.
+> [!WARNING]
+> Content capture is on by default. Prompts, responses, reasoning, and tool
+> arguments and results, including anything a tool prints, are sent to Agent
+> Lens. Set `FORGE_ANTIGRAVITY_INCLUDE_CONTENT=false` to leave them out.
 
 ## Requirements
 
-- macOS or Linux.
-- Python 3.10 or newer.
-- Antigravity CLI 1.1.10 or newer; the current release is recommended.
-- A W&B API key and destination in `entity/project` form.
-- [`uv`](https://docs.astral.sh/uv/), which runs the hook through `uvx`.
-
-See Google's official [hook reference](https://antigravity.google/docs/hooks),
-[plugin documentation](https://antigravity.google/docs/plugins?tab=cli), and
-[CLI repository](https://github.com/google-antigravity/antigravity-cli).
+- macOS or Linux
+- [Antigravity CLI](https://github.com/google-antigravity/antigravity-cli)
+  1.1.10 or newer
+- [uv](https://docs.astral.sh/uv/getting-started/installation/), whose `uvx`
+  command runs the hook
+- Python 3.10 or newer
+- A [W&B API key](https://forge.coreweave.com/wandb/authorize) and an Agent
+  Lens project in `entity/project` form
 
 ## Install
 
+Set your project and API key, then run the installer:
+
 ```bash
+export FORGE_TRACE_PROJECT=<entity>/<project>
+export WANDB_API_KEY=<your-api-key>
 uvx forge-agent-lens-for-google-antigravity@latest install
 ```
 
-`install` registers the bundled plugin through `agy plugin install`, with a
-Stop hook that runs this exact version through `uvx`, then checks what the hook
-needs and prints where traces will appear:
+`install` registers the plugin with `agy plugin install`, checks the settings
+the hook needs, and prints where traces will appear:
 
 ```text
 Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity X.Y.Z).
@@ -52,169 +51,139 @@ Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity X.Y.Z)
 View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents
 ```
 
-`uvx` must be on `PATH` in the environment that launches Antigravity. Set the
-destination there too. The Forge SDK reads `WANDB_API_KEY` directly or
-resolves it from the W&B entry in `.netrc`.
+The hook runs with the environment that `agy` was started in, so set
+`FORGE_TRACE_PROJECT` and the API key in your shell profile, or wherever you
+start `agy`, and make sure `uvx` is on that `PATH`. Instead of
+`WANDB_API_KEY`, the hook can read the key from the W&B host's entry in
+`~/.netrc`.
 
-```bash
-export FORGE_TRACE_PROJECT=entity/project
-export WANDB_API_KEY=...
-agy
-```
-
-To install a specific version, pin it. This also switches an existing install
-to that version:
-
-```bash
-uvx forge-agent-lens-for-google-antigravity@X.Y.Z install
-```
-
-Rerun the `@latest` command to upgrade. Antigravity copies the plugin during
-installation, and installing over an existing plugin replaces it. Running
-`install` through `uvx` caches that version, so the first Stop hook doesn't
-download it. Afterwards, a `uv tool` install from 0.1.0 or 0.1.1 is no longer
-used; remove it with `uv tool uninstall forge-agent-lens-for-google-antigravity`.
-
-`install` needs 0.1.2 or newer. For 0.1.0 or 0.1.1, install the executable with
-`uv tool install forge-agent-lens-for-google-antigravity==X.Y.Z`, then the
-plugin from the latest release archive. The archive's hook runs the executable
-on `PATH`, so it works with every version:
-
-```bash
-curl -fsSLO https://github.com/coreweave/forge-agent-lens-for-google-antigravity/releases/latest/download/forge-agent-lens-for-google-antigravity-plugin.zip
-unzip -qo forge-agent-lens-for-google-antigravity-plugin.zip -d forge-agent-lens-plugin
-agy plugin install forge-agent-lens-plugin
-```
-
-To test unreleased changes, see
-[Test a change in Antigravity](CONTRIBUTING.md#test-a-change-in-antigravity).
+Then start a new `agy` session. Each finished turn appears in Agent Lens.
 
 ## View traces
 
-Traces appear in W&B under `https://wandb.ai/<entity>/<project>/weave/agents`,
-where `entity/project` is `FORGE_TRACE_PROJECT`. For a dedicated or
-self-managed instance, links follow `WANDB_BASE_URL`, or `WANDB_APP_URL` when
-set. After each exported turn, the hook logs a link to that conversation:
+`install` prints your project's Agent Lens link. After each exported turn, the
+hook also logs a link to that conversation:
 
 ```text
 forge-agent-lens-for-google-antigravity: View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents/conversations/<conversation-id>
 ```
 
-Antigravity shows hook output neither in its terminal UI nor in `agy -p`
-output. It writes the hook's stderr to its CLI logs, so conversation links,
-export errors, and the warning logged when `FORGE_TRACE_PROJECT` is unset are
-all there:
+Antigravity doesn't show hook output in its terminal UI or in `agy -p` output.
+It writes the hook's messages, including these links and any export errors, to
+its CLI logs:
 
 ```bash
-grep -h "JSON hook command stderr" ~/.gemini/antigravity-cli/log/cli-*.log | tail
+grep -h "forge-agent-lens-for-google-antigravity:" ~/.gemini/antigravity-cli/log/cli-*.log | tail
 ```
 
-## How export works
+On Dedicated Cloud or self-managed W&B, links use the app URL derived from
+`WANDB_BASE_URL`, or `WANDB_APP_URL` if you set it.
 
-The plugin registers one observability-only `Stop` hook. It waits for
-`fullyIdle=true`, reads the untruncated sibling `transcript_full.jsonl` when
-available, and maps the completed turn through Forge SDK models:
+## Configuration
 
-| Antigravity record | Forge span |
-|---|---|
-| User request through fully-idle stop | `invoke_agent Antigravity` |
-| `PLANNER_RESPONSE` | `chat <model>` |
-| Tool request and following result | `execute_tool <tool>` |
-| `invoke_subagent` request and result | nested `invoke_agent <subagent>` |
-
-Forge emits one trace per turn and links those traces with the hook's
-`conversationId`. User and assistant text, reasoning, tool names, arguments,
-and results are preserved when present; step timestamps bound the spans. The
-transcript does not currently expose token usage, exact model request settings
-or response IDs, or a delegated subagent's internal LLM and tool activity, so
-the adapter does not synthesize those fields. The delegation itself is still
-exported as a nested subagent span.
-
-Forge supplies the standard `gen_ai.*` fields from its typed models. The
-adapter adds only integration provenance and Antigravity metadata without a
-semantic-convention equivalent:
-
-| Attribute | Value |
-|---|---|
-| `forge.integration.name` | `antigravity` |
-| `forge.integration.version` | Installed adapter version |
-| `forge.integration.antigravity.workspace.paths` | Hook `workspacePaths` |
-| `forge.integration.antigravity.execution.number` | Stop-hook execution attempt |
-| `forge.integration.antigravity.termination.reason` | Stop reason |
-
-The adapter calls `tracing.init()`, `log_conversation()`, and the returned
-session's `force_flush()` and `shutdown()`. Production code never constructs an
-HTTP request or OpenTelemetry exporter.
-
-The first observed stop exports only the newest turn, so installing the plugin
-does not upload earlier conversation history. A small checkpoint under the
-conversation's Antigravity artifact directory prevents duplicate export. Later
-turns include history observed after installation. The checkpoint advances only
-after the Forge SDK reports a successful flush; a failed export stays eligible
-for retry.
-
-## Configuration and privacy
-
-| Variable | Owner | Purpose |
+| Variable | Default | Description |
 |---|---|---|
-| `FORGE_TRACE_PROJECT` | adapter | Required destination in `entity/project` form |
-| `FORGE_ANTIGRAVITY_INCLUDE_CONTENT` | adapter | Set to `false` to omit prompts, outputs, reasoning, and tool payloads |
-| `WANDB_API_KEY` | Forge SDK | W&B authentication; `.netrc` is also supported |
-| `WANDB_BASE_URL` | Forge SDK | W&B base URL for endpoint derivation |
-| `WF_TRACE_SERVER_URL` | Forge SDK | Explicit trace-server override |
-| `WANDB_APP_URL` | adapter | W&B app URL for trace links; derived from `WANDB_BASE_URL` by default |
+| `FORGE_TRACE_PROJECT` | required | Agent Lens project, as `entity/project` |
+| `WANDB_API_KEY` | `~/.netrc` entry | W&B API key |
+| `FORGE_ANTIGRAVITY_INCLUDE_CONTENT` | `true` | Set to `false` to leave out prompts, responses, reasoning, and tool arguments and results |
+| `WANDB_BASE_URL` | `https://api.wandb.ai` | W&B API URL, for Dedicated Cloud or self-managed instances |
+| `WANDB_APP_URL` | derived from `WANDB_BASE_URL` | W&B app URL used in trace links |
+| `WF_TRACE_SERVER_URL` | derived from `WANDB_BASE_URL` | Overrides the trace server URL |
 
-Content capture defaults to enabled. For sensitive workspaces, set:
+### Content capture
 
-```bash
-export FORGE_ANTIGRAVITY_INCLUDE_CONTENT=false
+With `FORGE_ANTIGRAVITY_INCLUDE_CONTENT=false`, spans still include model,
+tool, and subagent names, subagent roles, timing, workspace paths, and the Stop
+hook's execution number and termination reason. The Forge SDK also adds your
+OS and Python versions to every span. The plugin doesn't remove secrets or
+personal data from captured content.
+
+## What gets traced
+
+Each turn becomes one trace:
+
+```text
+invoke_agent Antigravity     the turn, from your request until the agent stops
+├─ chat <model>              each model response
+├─ execute_tool <tool>       each tool call and its result
+└─ invoke_agent <subagent>   each subagent started by invoke_subagent
 ```
 
-Workspace paths and Stop metadata remain queryable when content capture is
-disabled.
+Spans use the standard OpenTelemetry GenAI (`gen_ai.*`) attributes and are
+timed from the transcript's step timestamps. Conversations are named after the
+first workspace folder.
 
-Runtime export failures are fail-open: the entrypoint logs the error, returns a
-neutral stop decision, and never extends the agent loop. The plugin registers
-no tool or invocation hooks and does not alter permissions, prompts, or results.
+### When turns are exported
 
-## Validate
+The first time the hook sees a conversation, it exports only the latest turn,
+so earlier history isn't uploaded, not even as context for later model calls.
+A checkpoint in the conversation's directory,
+`~/.gemini/antigravity-cli/brain/<conversation-id>/.forge-antigravity/state.json`,
+records which steps were exported (step numbers only, no content), so no turn
+is exported twice.
 
-The example runs the installed hook entrypoint against a synthetic transcript
-and an in-process OTLP receiver. It exercises the parser, Forge models, and the
-real Forge SDK exporter without contacting an external service:
+If an export fails, the hook logs the error and lets the turn end normally. The
+checkpoint doesn't advance, so the turn is retried the next time the agent
+stops. The plugin registers only a Stop hook, and it never changes prompts,
+permissions, or tool results.
+
+### Limitations
+
+- Antigravity's transcript doesn't record token usage, model request settings,
+  or response IDs, so traces have no token counts or costs.
+- A subagent's `invoke_agent` span, under the turn's root span, has its prompt
+  and result but no child spans. The transcript doesn't record the subagent's
+  own model and tool calls.
+
+## Troubleshooting
+
+Find the hook's messages with the `grep` command under View traces.
+
+| Problem | What to check |
+|---|---|
+| `install` shows `✗ Hook command` | Install [uv](https://docs.astral.sh/uv/getting-started/installation/) so that `uvx` is on `PATH`. |
+| The log says `FORGE_TRACE_PROJECT is not set` | Set it where you start `agy`, then start a new session. |
+| The log says `trace export failed` | The rest of the line names the error. Check the API key, your access to the project, and `WANDB_BASE_URL` on Dedicated Cloud or self-managed instances. |
+| No log lines from the plugin | Run `agy plugin list` to check that the plugin is installed, and check that `uvx` is on the `PATH` that `agy` starts with. |
+
+## Manage the plugin
+
+Rerun the install command to upgrade; it replaces the installed plugin. To pin
+a version, or switch to one, install from that version:
 
 ```bash
+uvx forge-agent-lens-for-google-antigravity@X.Y.Z install
+```
+
+Disable, re-enable, or remove the plugin with
+[`agy plugin`](https://antigravity.google/docs/plugins?tab=cli):
+
+```bash
+agy plugin disable forge-agent-lens-for-google-antigravity
+agy plugin enable forge-agent-lens-for-google-antigravity
+agy plugin uninstall forge-agent-lens-for-google-antigravity
+```
+
+If you set up 0.1.0 or 0.1.1 with `uv tool install`, upgrading leaves that
+executable unused. Remove it with
+`uv tool uninstall forge-agent-lens-for-google-antigravity`.
+
+See the [changelog][changelog] for what changed in each release.
+
+## Development
+
+```bash
+git clone https://github.com/coreweave/forge-agent-lens-for-google-antigravity.git
+cd forge-agent-lens-for-google-antigravity
 uv sync --locked --group test
+uv run pytest
 uv run python examples/local_smoke_test.py
 ```
 
-Run the release checks:
-
-```bash
-uv run ruff format --check .
-uv run ruff check .
-uv run mypy
-uv run coverage run -m pytest
-uv run coverage report
-uvx --from bandit==1.8.6 bandit -q -r src examples
-AUDIT_SITE_PACKAGES="$(uv run python -c 'import site; print(site.getsitepackages()[0])')"
-uvx --from pip-audit==2.9.0 pip-audit --path "$AUDIT_SITE_PACKAGES" --skip-editable
-uvx --from zizmor==1.30.1 zizmor --pedantic .
-uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint
-uv build
-uvx --from twine==7.0.0 twine check dist/*
-agy plugin validate src/forge_antigravity/plugin
-```
-
-To test against a local Forge SDK checkout without changing the lockfile:
-
-```bash
-uv run --with-editable /path/to/forge-sdk/python pytest
-```
-
-CI runs Python 3.10 through 3.14, enforces branch coverage of at least 90%, and
-validates release artifacts. See [CONTRIBUTING.md][contributing] and
-[CHANGELOG.md][changelog].
+The smoke test runs the hook against a sample transcript and an in-process
+OTLP receiver, without contacting any external service. See
+[CONTRIBUTING.md][contributing] for the full set of checks and for
+[testing a change in Antigravity][test-in-antigravity].
 
 ## Contributing
 
@@ -224,7 +193,7 @@ See [CONTRIBUTING.md][contributing]. Contributions require agreeing to the
 
 ## License
 
-Apache 2.0. See [LICENSE][license].
+[Apache License 2.0][license]
 
 ## Trademarks
 
@@ -236,3 +205,4 @@ with, sponsored by, or endorsed by Google.
 [contributing]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md
 [license]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/LICENSE
 [security]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/SECURITY.md
+[test-in-antigravity]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CONTRIBUTING.md#test-a-change-in-antigravity
