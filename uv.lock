@@ -359,7 +359,7 @@ wheels = [
 
 [[package]]
 name = "forge-agent-lens-for-google-antigravity"
-version = "0.1.3"
+version = "0.1.4"
 source = { editable = "." }
 dependencies = [
     { name = "coreweave" },
