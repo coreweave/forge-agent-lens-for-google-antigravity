@@ -20,11 +20,15 @@
   "packages": {
     ".": {
       "extra-files": [
-        "src/forge_antigravity/__init__.py",
         {
           "type": "toml",
           "path": "uv.lock",
           "jsonpath": "$.package[?(@.name.value=='forge-agent-lens-for-google-antigravity')].version"
+        },
+        {
+          "type": "json",
+          "path": "src/forge_antigravity/plugin/plugin.json",
+          "jsonpath": "$.version"
         }
       ]
     }
