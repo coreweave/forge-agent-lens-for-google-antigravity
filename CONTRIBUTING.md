@@ -101,8 +101,8 @@ This project is licensed under Apache-2.0 (see [`LICENSE`](./LICENSE)) and follo
 
 release-please keeps a release PR open that bumps the version and changelog
 from the Conventional Commits on `main`. The version changes in
-`pyproject.toml`, `src/forge_antigravity/__init__.py`, `uv.lock`, and
-`src/forge_antigravity/plugin/plugin.json`. Merging
+`src/forge_antigravity/plugin/plugin.json`, which `__version__` reads, and in
+`pyproject.toml` and `uv.lock`. Merging
 the PR tags `vX.Y.Z`, creates the GitHub release, and runs the release
 workflow. That workflow reruns the checks, publishes the wheel and sdist to
 PyPI through trusted publishing, and attaches them to the GitHub release with

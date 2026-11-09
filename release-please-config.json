@@ -20,7 +20,6 @@
   "packages": {
     ".": {
       "extra-files": [
-        "src/forge_antigravity/__init__.py",
         {
           "type": "toml",
           "path": "uv.lock",

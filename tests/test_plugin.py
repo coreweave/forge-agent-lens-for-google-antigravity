@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from importlib.resources import files
@@ -17,11 +18,11 @@ def test_plugin_manifest_and_hooks_match_the_supported_contract() -> None:
     manifest = json.loads((PLUGIN / "plugin.json").read_text(encoding="utf-8"))
     hooks = json.loads((PLUGIN / "hooks.json").read_text(encoding="utf-8"))
 
+    assert re.fullmatch(r"\d+\.\d+\.\d+", manifest.pop("version"))
     assert manifest == {
         "$schema": "https://antigravity.google/schemas/v1/plugin.json",
         "name": "forge-agent-lens-for-google-antigravity",
         "displayName": "CoreWeave Forge Agent Lens",
-        "version": __version__,
         "description": (
             "Export Google Antigravity agent, model, tool, and sub-agent spans through "
             "the CoreWeave Forge SDK."
