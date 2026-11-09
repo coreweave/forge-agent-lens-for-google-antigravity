@@ -20,10 +20,25 @@ def test_plugin_manifest_and_hooks_match_the_supported_contract() -> None:
     assert manifest == {
         "$schema": "https://antigravity.google/schemas/v1/plugin.json",
         "name": "forge-agent-lens-for-google-antigravity",
+        "displayName": "CoreWeave Forge Agent Lens",
+        "version": __version__,
         "description": (
             "Export Google Antigravity agent, model, tool, and sub-agent spans through "
             "the CoreWeave Forge SDK."
         ),
+        "author": {"name": "CoreWeave", "url": "https://www.coreweave.com"},
+        "homepage": "https://docs.coreweave.com/products/agent-lens/what-is-agent-lens",
+        "repository": "https://github.com/coreweave/forge-agent-lens-for-google-antigravity",
+        "license": "Apache-2.0",
+        "keywords": [
+            "coreweave",
+            "forge",
+            "agent-lens",
+            "wandb",
+            "weave",
+            "tracing",
+            "observability",
+        ],
     }
     assert set(hooks) == {"forge-agentlens"}
     events = hooks["forge-agentlens"]
