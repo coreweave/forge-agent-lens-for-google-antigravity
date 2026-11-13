@@ -18,7 +18,7 @@ env:
 jobs:
   build:
     name: Verify and build release artifacts
-    runs-on: ubuntu-latest
+    runs-on: cw-static-pub-x64-4c
     steps:
       - name: Check out integration
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -101,7 +101,7 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: cw-static-pub-x64-4c
     environment:
       name: pypi
       url: https://pypi.org/p/forge-agent-lens-for-google-antigravity
@@ -120,7 +120,7 @@ jobs:
   github-release:
     name: Attach artifacts to the GitHub release
     needs: publish-pypi
-    runs-on: ubuntu-latest
+    runs-on: cw-static-pub-x64-4c
     permissions:
       contents: write # Required to upload artifacts to the GitHub release.
     steps:
