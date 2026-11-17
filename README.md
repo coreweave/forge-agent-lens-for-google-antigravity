@@ -40,24 +40,33 @@ export WANDB_API_KEY=<your-api-key>
 uvx forge-agent-lens-for-google-antigravity@latest install
 ```
 
-`install` registers the plugin with `agy plugin install`, checks the settings
-the hook needs, and prints where traces will appear:
+`install` registers the plugin with `agy plugin install`, saves
+`FORGE_TRACE_PROJECT` and `FORGE_ANTIGRAVITY_INCLUDE_CONTENT` from your
+environment to the [settings file](#settings-file), checks the settings the
+hook needs, and prints where traces will appear:
 
 ```text
 Installed the Antigravity plugin (forge-agent-lens-for-google-antigravity X.Y.Z).
+Saved trace settings from the environment to ~/.forge-agent-lens-for-google-antigravity/settings.json.
 ✓ Hook command         uvx forge-agent-lens-for-google-antigravity@X.Y.Z
-✓ FORGE_TRACE_PROJECT  my-team/antigravity-traces
+✓ Project              my-team/antigravity-traces
 ✓ W&B API key          WANDB_API_KEY
+✓ Content capture      on: prompts, responses, reasoning, and tool I/O are exported
 View traces: https://wandb.ai/my-team/antigravity-traces/weave/agents
 ```
 
-The hook runs with the environment that `agy` was started in, so set
-`FORGE_TRACE_PROJECT` and the API key in your shell profile, or wherever you
-start `agy`, and make sure `uvx` is on that `PATH`. Instead of
-`WANDB_API_KEY`, the hook can read the key from the W&B host's entry in
-`~/.netrc`.
+The hook runs with the environment that Antigravity was started in, and
+`uvx` must be on that `PATH`. If you start the Antigravity app from the Dock
+or Start menu, it doesn't see variables exported in your shell profile, so
+the hook reads the project from the settings file and the API key from the
+W&B host's entry in `~/.netrc`. Run `uvx wandb login` to save the key there.
 
-Then start a new `agy` session. Each finished turn appears in Agent Lens.
+Then start a new `agy` session. Each finished turn appears in Agent Lens. To
+check the settings again without reinstalling, run:
+
+```bash
+uvx forge-agent-lens-for-google-antigravity@latest status
+```
 
 ## View traces
 
@@ -90,9 +99,26 @@ On Dedicated Cloud or self-managed W&B, links use the app URL derived from
 | `WANDB_APP_URL` | derived from `WANDB_BASE_URL` | W&B app URL used in trace links |
 | `WF_TRACE_SERVER_URL` | derived from `WANDB_BASE_URL` | Overrides the trace server URL |
 
+### Settings file
+
+When `FORGE_TRACE_PROJECT` or `FORGE_ANTIGRAVITY_INCLUDE_CONTENT` isn't set,
+the hook reads it from
+`~/.forge-agent-lens-for-google-antigravity/settings.json`:
+
+```json
+{
+  "project": "my-team/antigravity-traces",
+  "include_content": true
+}
+```
+
+Environment variables override the file. The file doesn't hold the API key;
+use `WANDB_API_KEY` or `~/.netrc`.
+
 ### Content capture
 
-With `FORGE_ANTIGRAVITY_INCLUDE_CONTENT=false`, spans still include model,
+With content capture off, through `FORGE_ANTIGRAVITY_INCLUDE_CONTENT=false` or
+`"include_content": false` in the settings file, spans still include model,
 tool, and subagent names, subagent roles, timing, workspace paths, and the Stop
 hook's execution number and termination reason. The Forge SDK also adds your
 OS and Python versions to every span. The plugin doesn't remove secrets or
@@ -142,7 +168,8 @@ Find the hook's messages with the `grep` command under View traces.
 | Problem | What to check |
 |---|---|
 | `install` shows `✗ Hook command` | Install [uv](https://docs.astral.sh/uv/getting-started/installation/) so that `uvx` is on `PATH`. |
-| The log says `FORGE_TRACE_PROJECT is not set` | Set it where you start `agy`, then start a new session. |
+| `install` or `status` shows `✗ Settings file` | Fix the JSON error it names in the [settings file](#settings-file). |
+| The log says `FORGE_TRACE_PROJECT is not set` | Add `project` to the [settings file](#settings-file), or set `FORGE_TRACE_PROJECT` where you start Antigravity. |
 | The log says `trace export failed` | The rest of the line names the error. Check the API key, your access to the project, and `WANDB_BASE_URL` on Dedicated Cloud or self-managed instances. |
 | No log lines from the plugin | Run `agy plugin list` to check that the plugin is installed, and check that `uvx` is on the `PATH` that `agy` starts with. |
 

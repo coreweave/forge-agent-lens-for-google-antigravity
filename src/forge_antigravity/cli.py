@@ -19,6 +19,11 @@ from urllib.parse import unquote, urlparse
 
 from forge_antigravity import __version__, hook
 from forge_antigravity.links import agents_url
+from forge_antigravity.settings import (
+    SETTINGS_DISPLAY_PATH,
+    load_settings,
+    save_environment_settings,
+)
 
 _EXECUTABLE = "forge-agent-lens-for-google-antigravity"
 
@@ -34,8 +39,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=__version__)
     commands = parser.add_subparsers(dest="command", metavar="command")
     commands.add_parser("install", help="install the Antigravity plugin and check trace settings")
-    if parser.parse_args(argv).command == "install":
+    commands.add_parser("status", help="check the trace settings the Stop hook will use")
+    command = parser.parse_args(argv).command
+    if command == "install":
         return install()
+    if command == "status":
+        return status()
     if sys.stdin is not None and sys.stdin.isatty():
         parser.error(
             "expected a Stop hook payload on stdin; "
@@ -60,22 +69,46 @@ def install() -> int:
         return completed.returncode
 
     print(f"Installed the Antigravity plugin ({_EXECUTABLE} {__version__}).")
+    try:
+        if save_environment_settings():
+            print(f"Saved trace settings from the environment to {SETTINGS_DISPLAY_PATH}.")
+    except ValueError:
+        pass  # _report_trace_settings reports the same unreadable settings file.
     runner = shutil.which(hook_command[0])
     _report(
         runner is not None,
         "Hook command",
         shlex.join(hook_command) if runner else f"{hook_command[0]} not on PATH: install uv",
     )
+    _report_trace_settings(ready=runner is not None)
+    return 0
 
-    project = os.environ.get("FORGE_TRACE_PROJECT", "").strip()
-    url = agents_url(project)
+
+def status() -> int:
+    uvx = shutil.which("uvx")
+    _report(uvx is not None, "uvx", uvx or "not on PATH: install uv")
+    _report_trace_settings(ready=uvx is not None)
+    return 0
+
+
+def _report_trace_settings(*, ready: bool) -> None:
+    try:
+        settings = load_settings()
+    except ValueError as error:
+        _report(False, "Settings file", str(error))
+        return
+
+    url = agents_url(settings.project)
+    from_file = f" ({SETTINGS_DISPLAY_PATH})"
     if url:
-        detail = project
-    elif project:
-        detail = f"{project!r} must be entity/project"
+        detail = settings.project + (
+            from_file if settings.project_source == "settings file" else ""
+        )
+    elif settings.project:
+        detail = f"{settings.project!r} must be entity/project"
     else:
         detail = "not set: export FORGE_TRACE_PROJECT=entity/project"
-    _report(url is not None, "FORGE_TRACE_PROJECT", detail)
+    _report(url is not None, "Project", detail)
 
     host = urlparse(os.environ.get("WANDB_BASE_URL", "https://api.wandb.ai")).netloc
     key_source = _api_key_source(host)
@@ -85,11 +118,22 @@ def install() -> int:
         key_source or f"not found: set WANDB_API_KEY or add {host} to ~/.netrc",
     )
 
+    content = (
+        "on: prompts, responses, reasoning, and tool I/O are exported"
+        if settings.include_content
+        else "off: only names and timing are exported"
+    )
+    if settings.include_content_source == "settings file":
+        content += from_file
+    _report(True, "Content capture", content)
+
     if url:
         print(f"View traces: {url}")
-    if runner is None or url is None or key_source is None:
-        print("Antigravity reads these settings from the environment it starts in.")
-    return 0
+    if not ready or url is None or key_source is None:
+        print(
+            "Antigravity started outside a shell doesn't see shell exports. Put the project in "
+            f"{SETTINGS_DISPLAY_PATH} and the API key in ~/.netrc."
+        )
 
 
 def _hook_command() -> list[str]:
