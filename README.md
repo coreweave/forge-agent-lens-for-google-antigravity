@@ -68,6 +68,10 @@ check the settings again without reinstalling, run:
 uvx forge-agent-lens-for-google-antigravity@latest status
 ```
 
+You can also ask the agent to verify your Agent Lens setup. The plugin's
+`agent-lens-setup` skill runs `status`, explains anything missing, and can
+change the settings file for you.
+
 ## View traces
 
 `install` prints your project's Agent Lens link. After each exported turn, the
@@ -186,10 +190,16 @@ Disable, re-enable, or remove the plugin with
 [`agy plugin`](https://antigravity.google/docs/plugins?tab=cli):
 
 ```bash
-agy plugin disable forge-agent-lens-for-google-antigravity
-agy plugin enable forge-agent-lens-for-google-antigravity
-agy plugin uninstall forge-agent-lens-for-google-antigravity
+agy plugin disable forge-agent-lens
+agy plugin enable forge-agent-lens
+agy plugin uninstall forge-agent-lens
 ```
+
+Through 0.1.4, the plugin was named `forge-agent-lens-for-google-antigravity`.
+Installing a later version removes the plugin under its old name, so the hook
+doesn't run twice. If you install the new plugin another way, such as from the
+Antigravity Marketplace, remove the old one with
+`agy plugin uninstall forge-agent-lens-for-google-antigravity`.
 
 If you set up 0.1.0 or 0.1.1 with `uv tool install`, upgrading leaves that
 executable unused. Remove it with
@@ -230,8 +240,9 @@ See [CONTRIBUTING.md][contributing]. Contributions require agreeing to the
 
 ## Trademarks
 
-Google Antigravity is a trademark of Google LLC. This project is not affiliated
-with, sponsored by, or endorsed by Google.
+CoreWeave and the CoreWeave logo are trademarks of CoreWeave, Inc. Google
+Antigravity is a trademark of Google LLC. This project is not affiliated with,
+sponsored by, or endorsed by Google.
 
 [changelog]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CHANGELOG.md
 [cla]: https://github.com/coreweave/forge-agent-lens-for-google-antigravity/blob/main/CLA.md

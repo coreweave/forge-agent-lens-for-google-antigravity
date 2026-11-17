@@ -15,6 +15,7 @@ import tempfile
 from importlib.metadata import distribution
 from importlib.resources import files
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import unquote, urlparse
 
 from forge_antigravity import __version__, hook
@@ -25,7 +26,12 @@ from forge_antigravity.settings import (
     save_environment_settings,
 )
 
+if TYPE_CHECKING:
+    from importlib.abc import Traversable
+
 _EXECUTABLE = "forge-agent-lens-for-google-antigravity"
+# Versions up to 0.1.4 named the plugin after the package.
+_LEGACY_PLUGIN = _EXECUTABLE
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -67,6 +73,7 @@ def install() -> int:
         completed = subprocess.run([agy, "plugin", "install", plugin], check=False)  # nosec B603
     if completed.returncode != 0:
         return completed.returncode
+    _uninstall_legacy_plugin(agy)
 
     print(f"Installed the Antigravity plugin ({_EXECUTABLE} {__version__}).")
     try:
@@ -154,13 +161,33 @@ def _hook_command() -> list[str]:
 
 
 def _write_plugin(destination: Path, command: str) -> None:
-    source = files("forge_antigravity") / "plugin"
-    manifest = source.joinpath("plugin.json").read_text(encoding="utf-8")
-    (destination / "plugin.json").write_text(manifest, encoding="utf-8")
-    hooks = json.loads(source.joinpath("hooks.json").read_text(encoding="utf-8"))
+    _copy_tree(files("forge_antigravity") / "plugin", destination)
+    hooks_path = destination / "hooks.json"
+    hooks = json.loads(hooks_path.read_text(encoding="utf-8"))
     for handler in hooks["forge-agentlens"]["Stop"]:
         handler["command"] = command
-    (destination / "hooks.json").write_text(json.dumps(hooks, indent=2) + "\n", encoding="utf-8")
+    hooks_path.write_text(json.dumps(hooks, indent=2) + "\n", encoding="utf-8")
+
+
+def _copy_tree(source: Traversable, destination: Path) -> None:
+    destination.mkdir(exist_ok=True)
+    for entry in source.iterdir():
+        if entry.is_dir():
+            _copy_tree(entry, destination / entry.name)
+        else:
+            (destination / entry.name).write_bytes(entry.read_bytes())
+
+
+def _uninstall_legacy_plugin(agy: str) -> None:
+    listed = subprocess.run(  # nosec B603
+        [agy, "plugin", "list"], capture_output=True, check=False, text=True
+    )
+    try:
+        names = {entry["name"] for entry in json.loads(listed.stdout)["imports"]}
+    except (ValueError, LookupError, TypeError):
+        return
+    if _LEGACY_PLUGIN in names:
+        subprocess.run([agy, "plugin", "uninstall", _LEGACY_PLUGIN], check=False)  # nosec B603
 
 
 def _report(ok: bool, label: str, detail: str) -> None:

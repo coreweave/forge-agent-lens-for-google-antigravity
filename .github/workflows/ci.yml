@@ -84,7 +84,7 @@ jobs:
           uv venv --python 3.13 .package-venv
           uv pip install --python .package-venv/bin/python --no-deps dist/*.whl
           test "$(printf '{}' | .package-venv/bin/forge-agent-lens-for-google-antigravity)" = '{"decision":"allow"}'
-          .package-venv/bin/python -c 'from importlib.resources import files; assert {p.name for p in (files("forge_antigravity") / "plugin").iterdir()} == {"hooks.json", "plugin.json"}'
+          .package-venv/bin/python -c 'from importlib.resources import files; plugin = files("forge_antigravity") / "plugin"; assert {p.name for p in plugin.iterdir()} == {"README.md", "assets", "hooks.json", "plugin.json", "skills"}; assert (plugin / "assets" / "logo.svg").is_file() and (plugin / "skills" / "agent-lens-setup" / "SKILL.md").is_file()'
 
   compatibility:
     name: Python ${{ matrix.python-version }}
