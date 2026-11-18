@@ -25,6 +25,9 @@ SHELL_HINT = (
     "~/.forge-agent-lens-for-google-antigravity/settings.json and the API key in ~/.netrc.\n"
 )
 PACKAGED_PLUGIN = Path(str(files("forge_antigravity") / "plugin"))
+LEGACY_LISTING = json.dumps(
+    {"imports": [{"name": "forge-agent-lens-for-google-antigravity", "source": "antigravity"}]}
+)
 
 
 class _Distribution:
@@ -37,6 +40,7 @@ class _Distribution:
 
 @dataclass
 class _Agy:
+    listing: str = '{"imports": []}'
     calls: list[list[str]] = field(default_factory=list)
     plugin: dict[str, str] = field(default_factory=dict)
 
@@ -59,7 +63,8 @@ def agy(monkeypatch) -> _Agy:
             fake.plugin = _read_tree(Path(command[2]))
             command = ["plugin", "install", "<plugin>"]
         fake.calls.append(command)
-        return subprocess.CompletedProcess(args, 0)
+        stdout = fake.listing if command == ["plugin", "list"] else ""
+        return subprocess.CompletedProcess(args, 0, stdout=stdout)
 
     monkeypatch.setattr(cli, "distribution", lambda name: _Distribution(None))
     monkeypatch.setattr(cli.shutil, "which", lambda name: f"/opt/bin/{name}")
@@ -126,7 +131,7 @@ def test_install_registers_the_bundled_plugin_and_saves_the_environment(
 
     assert cli.main(["install"]) == 0
 
-    assert agy.calls == [["plugin", "install", "<plugin>"]]
+    assert agy.calls == [["plugin", "install", "<plugin>"], ["plugin", "list"]]
     assert agy.plugin == _read_tree(PACKAGED_PLUGIN)
     assert _hook_commands(agy.plugin) == [HOOK_COMMAND]
     assert json.loads(settings_file.read_text()) == {"project": "my-team/antigravity-traces"}
@@ -168,6 +173,27 @@ def test_install_explains_missing_trace_settings(agy, settings_file: Path, capsy
         + CONTENT_ON
         + SHELL_HINT
     )
+
+
+def test_install_removes_the_plugin_installed_under_its_old_name(agy) -> None:
+    agy.listing = LEGACY_LISTING
+
+    assert cli.main(["install"]) == 0
+
+    assert agy.calls == [
+        ["plugin", "install", "<plugin>"],
+        ["plugin", "list"],
+        ["plugin", "uninstall", "forge-agent-lens-for-google-antigravity"],
+    ]
+
+
+@pytest.mark.parametrize("listing", ['{"imports": [{"name": "forge-agent-lens"}]}', "not json"])
+def test_install_skips_legacy_cleanup_when_agy_lists_no_old_plugin(listing: str, agy) -> None:
+    agy.listing = listing
+
+    assert cli.main(["install"]) == 0
+
+    assert agy.calls == [["plugin", "install", "<plugin>"], ["plugin", "list"]]
 
 
 def test_install_rejects_a_project_without_an_entity(agy, monkeypatch, capsys) -> None:
