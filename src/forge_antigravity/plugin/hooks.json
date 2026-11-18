@@ -3,8 +3,8 @@
     "Stop": [
       {
         "type": "command",
-        "command": "forge-agent-lens-for-google-antigravity",
-        "timeout": 60
+        "command": "uvx forge-agent-lens-for-google-antigravity@0.1.4",
+        "timeout": 15
       }
     ]
   }

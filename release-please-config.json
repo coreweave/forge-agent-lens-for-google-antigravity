@@ -29,6 +29,11 @@
           "type": "json",
           "path": "src/forge_antigravity/plugin/plugin.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "src/forge_antigravity/plugin/hooks.json",
+          "jsonpath": "$['forge-agentlens'].Stop[*].command"
         }
       ]
     }
