@@ -470,6 +470,177 @@ def test_content_gate_keeps_transcript_payloads_off_the_wire(tmp_path: Path, mon
     assert b"The tests look good" not in body
 
 
+def test_turn_exported_without_content_stays_out_of_later_history(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _payload(tmp_path, conversation_id="content-toggle")
+    transcript = Path(str(payload["transcriptPath"])).with_name("transcript_full.jsonl")
+    records = FIXTURE.read_text(encoding="utf-8").splitlines(keepends=True)
+    transcript.write_text("".join(records[:5]), encoding="utf-8")
+    monkeypatch.setenv("WANDB_API_KEY", "test-key")
+
+    with local_otlp_receiver() as (base_url, requests):
+        monkeypatch.setenv("WF_TRACE_SERVER_URL", base_url)
+        export_pending_turns(payload, project="team/project", include_content=False)
+        first_body = requests.get(timeout=5)
+
+        transcript.write_text("".join(records), encoding="utf-8")
+        export_pending_turns(payload, project="team/project", include_content=True)
+        second_body = requests.get(timeout=5)
+
+    for body in (first_body, second_body):
+        assert b"Run the greeting command." not in body
+        assert b"the command printed hello." not in body
+    assert b"Ask a reviewer to inspect the tests." in second_body
+    assert load_state(payload).content_excluded_through_step == 4
+
+
+def _steps(*steps: tuple[str, str]) -> list[TranscriptStep]:
+    sources = {"USER_INPUT": "USER_EXPLICIT", "SYSTEM_MESSAGE": "SYSTEM"}
+    return [
+        TranscriptStep(
+            step_index=index,
+            source=sources.get(type, "MODEL"),
+            type=type,
+            status="DONE",
+            created_at=datetime(2026, 1, 2, 12, 0, index, tzinfo=timezone.utc),
+            content=content,
+        )
+        for index, (type, content) in enumerate(steps)
+    ]
+
+
+def _record_exports(monkeypatch, snapshots: list[list[TranscriptStep]]) -> list[dict[str, object]]:
+    from coreweave.forge.agentlens import tracing
+
+    remaining = iter(snapshots)
+    monkeypatch.setattr(
+        exporter, "_load_stable_transcript", lambda *args, **kwargs: next(remaining)
+    )
+    logged: list[dict[str, object]] = []
+    session = SimpleNamespace(force_flush=lambda: True, shutdown=lambda: None)
+    monkeypatch.setattr(tracing, "init", lambda *args, **kwargs: session)
+    monkeypatch.setattr(
+        tracing,
+        "log_conversation",
+        lambda **kwargs: (
+            logged.append(kwargs)
+            or SimpleNamespace(span_count=1, trace_ids=["trace"], root_span_ids=["root"])
+        ),
+    )
+    return logged
+
+
+def _input_messages(logged: dict[str, object]) -> list[str]:
+    return [message.content for message in logged["turns"][0].spans[0].input_messages]
+
+
+@pytest.mark.parametrize(
+    ("include_content", "third_turn_input"),
+    [
+        ((False, True, True), ["second request", "second answer", "third request"]),
+        ((True, False, True), ["third request"]),
+    ],
+)
+def test_history_restarts_after_the_last_turn_exported_without_content(
+    tmp_path: Path, monkeypatch, include_content: tuple[bool, ...], third_turn_input: list[str]
+) -> None:
+    payload = _payload(tmp_path, conversation_id="history-restart")
+    steps = _steps(
+        ("USER_INPUT", "first request"),
+        ("PLANNER_RESPONSE", "first answer"),
+        ("USER_INPUT", "second request"),
+        ("PLANNER_RESPONSE", "second answer"),
+        ("USER_INPUT", "third request"),
+        ("PLANNER_RESPONSE", "third answer"),
+    )
+    logged = _record_exports(monkeypatch, [steps[:2], steps[:4], steps])
+
+    for value in include_content:
+        export_pending_turns(payload, project="team/project", include_content=value)
+
+    assert [call["include_content"] for call in logged] == list(include_content)
+    assert _input_messages(logged[2]) == third_turn_input
+
+
+def test_stop_hook_continuation_keeps_steps_exported_without_content_out_of_history(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _payload(tmp_path, conversation_id="continuation-toggle")
+    steps = _steps(
+        ("USER_INPUT", "start the task"),
+        ("PLANNER_RESPONSE", "first pass"),
+        ("SYSTEM_MESSAGE", "continue hook reason"),
+        ("PLANNER_RESPONSE", "second pass"),
+    )
+    logged = _record_exports(monkeypatch, [steps[:2], steps])
+
+    export_pending_turns(payload, project="team/project", include_content=False)
+    export_pending_turns(payload, project="team/project", include_content=True)
+
+    assert logged[1]["include_content"] is True
+    assert logged[1]["turns"][0].output_messages[0].content == "second pass"
+    assert _input_messages(logged[1]) == []
+
+
+def test_retry_of_an_export_that_failed_without_content_stays_without_content(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _payload(tmp_path, conversation_id="retry-toggle")
+    steps = _steps(("USER_INPUT", "first request"), ("PLANNER_RESPONSE", "first answer"))
+    logged = _record_exports(monkeypatch, [steps, steps])
+    from coreweave.forge.agentlens import tracing
+
+    failing = SimpleNamespace(force_flush=lambda: False, shutdown=lambda: None)
+    monkeypatch.setattr(tracing, "init", lambda *args, **kwargs: failing)
+    with pytest.raises(RuntimeError, match="could not flush"):
+        export_pending_turns(payload, project="team/project", include_content=False)
+    assert load_state(payload) == ExportState(
+        last_exported_step=-1,
+        history_start_step=0,
+        content_excluded_through_step=1,
+    )
+
+    failing.force_flush = lambda: True
+    export_pending_turns(payload, project="team/project", include_content=True)
+
+    assert logged[1]["include_content"] is False
+    assert load_state(payload).last_exported_step == 1
+
+
+@pytest.mark.parametrize(
+    ("state_file", "exported_from_step"),
+    [
+        ("not json", 2),
+        ('{"last_exported_step":-1,"history_start_step":0,"content_excluded_through_step":"1"}', 0),
+    ],
+)
+def test_unusable_state_file_exports_without_content(
+    tmp_path: Path, monkeypatch, state_file: str, exported_from_step: int
+) -> None:
+    payload = _payload(tmp_path, conversation_id="corrupted-state")
+    steps = _steps(
+        ("USER_INPUT", "first request"),
+        ("PLANNER_RESPONSE", "first answer"),
+        ("USER_INPUT", "second request"),
+        ("PLANNER_RESPONSE", "second answer"),
+    )
+    logged = _record_exports(monkeypatch, [steps])
+    path = tmp_path / "artifact" / ".forge-antigravity" / "state.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(state_file, encoding="utf-8")
+
+    export_pending_turns(payload, project="team/project", include_content=True)
+
+    assert logged[0]["include_content"] is False
+    assert logged[0]["turns"][0].started_at == steps[exported_from_step].created_at
+    assert load_state(payload) == ExportState(
+        last_exported_step=3,
+        history_start_step=exported_from_step,
+        content_excluded_through_step=3,
+    )
+
+
 def test_installed_hook_reaches_the_sdk_exporter(tmp_path: Path, monkeypatch) -> None:
     payload = _payload(tmp_path, conversation_id="installed-hook")
     with local_otlp_receiver() as (base_url, requests):

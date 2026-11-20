@@ -60,6 +60,10 @@ set `"include_content": false` in `settings.json`, or set
 `FORGE_ANTIGRAVITY_INCLUDE_CONTENT=false`. Spans still record model, tool, and
 subagent names, subagent roles, timing, and workspace paths.
 
+A turn exported while content capture is off never has its content exported
+later. If you turn capture back on in the same conversation, the message
+history on later model calls starts after that turn.
+
 ## Troubleshooting
 
 The hook writes its messages, including export errors and a link to each
