@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. The project follows
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/compare/v0.1.4...v0.2.0) (2026-11-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* `agy plugin disable|enable|uninstall` now take `forge-agent-lens`.
+
+### Features
+
+* make the bundled Stop hook work without the CLI installer ([#12](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/issues/12)) ([82ccf81](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/commit/82ccf81db80f816d3e6aa68dbcd38f6a9382d09c))
+* rename the plugin to forge-agent-lens and add Marketplace listing assets ([#13](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/issues/13)) ([38ec0df](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/commit/38ec0dfe70ee71da47aae19c4b3a6cb7d50fe4f8))
+
 ## [0.1.4](https://github.com/coreweave/forge-agent-lens-for-google-antigravity/compare/v0.1.3...v0.1.4) (2026-11-09)
 
 
