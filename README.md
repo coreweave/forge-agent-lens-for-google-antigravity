@@ -128,7 +128,7 @@ hook's execution number and termination reason. The Forge SDK also adds your
 OS and Python versions to every span. The plugin doesn't remove secrets or
 personal data from captured content.
 
-A turn exported while content capture is off never has its content exported
+The content of a turn exported while content capture is off isn't exported
 later. If you turn capture back on in the same conversation, the message
 history on later model calls starts after that turn.
 

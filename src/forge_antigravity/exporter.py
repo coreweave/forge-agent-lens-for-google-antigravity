@@ -80,8 +80,8 @@ def export_pending_turns(
         and all(turn.start_step > excluded_through for turn in pending)
     )
     if not send_content:
-        excluded_through = max(turn.end_step for turn in pending)
-    if state.history_start_step is None or excluded_through != state.content_excluded_through_step:
+        excluded_through = max(excluded_through, *(turn.end_step for turn in pending))
+    if state.history_start_step is None or not send_content:
         save_state(
             payload,
             ExportState(

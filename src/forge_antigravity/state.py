@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +14,7 @@ class ExportState:
     # Content of steps up to this index must never be exported.
     content_excluded_through_step: int = -1
     # A state file exists but is unusable, so what it excluded is unknown. Not saved.
-    corrupted: bool = field(default=False, compare=False)
+    corrupted: bool = False
 
 
 def load_state(payload: dict[str, Any]) -> ExportState:

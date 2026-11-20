@@ -495,7 +495,7 @@ def test_turn_exported_without_content_stays_out_of_later_history(
     assert load_state(payload).content_excluded_through_step == 4
 
 
-def _steps(*steps: tuple[str, str]) -> list[TranscriptStep]:
+def _conversation(*steps: tuple[str, str]) -> list[TranscriptStep]:
     sources = {"USER_INPUT": "USER_EXPLICIT", "SYSTEM_MESSAGE": "SYSTEM"}
     return [
         TranscriptStep(
@@ -510,7 +510,11 @@ def _steps(*steps: tuple[str, str]) -> list[TranscriptStep]:
     ]
 
 
-def _record_exports(monkeypatch, snapshots: list[list[TranscriptStep]]) -> list[dict[str, object]]:
+def _record_exports(
+    monkeypatch,
+    snapshots: list[list[TranscriptStep]],
+    flushed: tuple[bool, ...] = (),
+) -> list[dict[str, object]]:
     from coreweave.forge.agentlens import tracing
 
     remaining = iter(snapshots)
@@ -518,7 +522,8 @@ def _record_exports(monkeypatch, snapshots: list[list[TranscriptStep]]) -> list[
         exporter, "_load_stable_transcript", lambda *args, **kwargs: next(remaining)
     )
     logged: list[dict[str, object]] = []
-    session = SimpleNamespace(force_flush=lambda: True, shutdown=lambda: None)
+    flushes = iter(flushed)
+    session = SimpleNamespace(force_flush=lambda: next(flushes, True), shutdown=lambda: None)
     monkeypatch.setattr(tracing, "init", lambda *args, **kwargs: session)
     monkeypatch.setattr(
         tracing,
@@ -531,8 +536,8 @@ def _record_exports(monkeypatch, snapshots: list[list[TranscriptStep]]) -> list[
     return logged
 
 
-def _input_messages(logged: dict[str, object]) -> list[str]:
-    return [message.content for message in logged["turns"][0].spans[0].input_messages]
+def _input_messages(call: dict[str, object]) -> list[str]:
+    return [message.content for message in call["turns"][0].spans[0].input_messages]
 
 
 @pytest.mark.parametrize(
@@ -546,7 +551,7 @@ def test_history_restarts_after_the_last_turn_exported_without_content(
     tmp_path: Path, monkeypatch, include_content: tuple[bool, ...], third_turn_input: list[str]
 ) -> None:
     payload = _payload(tmp_path, conversation_id="history-restart")
-    steps = _steps(
+    steps = _conversation(
         ("USER_INPUT", "first request"),
         ("PLANNER_RESPONSE", "first answer"),
         ("USER_INPUT", "second request"),
@@ -567,7 +572,7 @@ def test_stop_hook_continuation_keeps_steps_exported_without_content_out_of_hist
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _payload(tmp_path, conversation_id="continuation-toggle")
-    steps = _steps(
+    steps = _conversation(
         ("USER_INPUT", "start the task"),
         ("PLANNER_RESPONSE", "first pass"),
         ("SYSTEM_MESSAGE", "continue hook reason"),
@@ -587,25 +592,80 @@ def test_retry_of_an_export_that_failed_without_content_stays_without_content(
     tmp_path: Path, monkeypatch
 ) -> None:
     payload = _payload(tmp_path, conversation_id="retry-toggle")
-    steps = _steps(("USER_INPUT", "first request"), ("PLANNER_RESPONSE", "first answer"))
-    logged = _record_exports(monkeypatch, [steps, steps])
-    from coreweave.forge.agentlens import tracing
+    steps = _conversation(
+        ("USER_INPUT", "first request"),
+        ("PLANNER_RESPONSE", "first answer"),
+        ("USER_INPUT", "second request"),
+        ("PLANNER_RESPONSE", "second answer"),
+        ("USER_INPUT", "third request"),
+        ("PLANNER_RESPONSE", "third answer"),
+    )
+    logged = _record_exports(
+        monkeypatch,
+        [steps[:2], steps[:3], steps[:5], steps],
+        flushed=(True, False),
+    )
 
-    failing = SimpleNamespace(force_flush=lambda: False, shutdown=lambda: None)
-    monkeypatch.setattr(tracing, "init", lambda *args, **kwargs: failing)
+    export_pending_turns(payload, project="team/project", include_content=True)
     with pytest.raises(RuntimeError, match="could not flush"):
         export_pending_turns(payload, project="team/project", include_content=False)
     assert load_state(payload) == ExportState(
-        last_exported_step=-1,
+        last_exported_step=1,
         history_start_step=0,
-        content_excluded_through_step=1,
+        content_excluded_through_step=2,
     )
 
-    failing.force_flush = lambda: True
+    export_pending_turns(payload, project="team/project", include_content=True)
     export_pending_turns(payload, project="team/project", include_content=True)
 
-    assert logged[1]["include_content"] is False
-    assert load_state(payload).last_exported_step == 1
+    assert [call["include_content"] for call in logged] == [True, False, False, True]
+    assert len(logged[2]["turns"]) == 2
+    assert logged[3]["turns"][0].output_messages[0].content == "third answer"
+    assert _input_messages(logged[3]) == []
+
+
+def test_content_exclusion_mark_does_not_move_back_with_the_transcript(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _payload(tmp_path, conversation_id="shorter-transcript")
+    steps = _conversation(
+        ("USER_INPUT", "first request"),
+        ("PLANNER_RESPONSE", "first answer"),
+        ("USER_INPUT", "second request"),
+        ("PLANNER_RESPONSE", "second answer"),
+        ("USER_INPUT", "third request"),
+        ("PLANNER_RESPONSE", "third answer"),
+    )
+    logged = _record_exports(
+        monkeypatch,
+        [steps[:2], steps, steps[:4], steps],
+        flushed=(True, False),
+    )
+
+    export_pending_turns(payload, project="team/project", include_content=True)
+    with pytest.raises(RuntimeError, match="could not flush"):
+        export_pending_turns(payload, project="team/project", include_content=False)
+    export_pending_turns(payload, project="team/project", include_content=True)
+    export_pending_turns(payload, project="team/project", include_content=True)
+
+    assert [call["include_content"] for call in logged] == [True, False, False, False]
+
+
+def test_first_observation_with_content_keeps_earlier_turns_out_of_history(
+    tmp_path: Path, monkeypatch
+) -> None:
+    payload = _payload(tmp_path, conversation_id="first-observation")
+    steps = _conversation(
+        ("USER_INPUT", "first request"),
+        ("PLANNER_RESPONSE", "first answer"),
+        ("USER_INPUT", "second request"),
+        ("PLANNER_RESPONSE", "second answer"),
+    )
+    logged = _record_exports(monkeypatch, [steps])
+
+    export_pending_turns(payload, project="team/project", include_content=True)
+
+    assert _input_messages(logged[0]) == ["second request"]
 
 
 @pytest.mark.parametrize(
@@ -619,7 +679,7 @@ def test_unusable_state_file_exports_without_content(
     tmp_path: Path, monkeypatch, state_file: str, exported_from_step: int
 ) -> None:
     payload = _payload(tmp_path, conversation_id="corrupted-state")
-    steps = _steps(
+    steps = _conversation(
         ("USER_INPUT", "first request"),
         ("PLANNER_RESPONSE", "first answer"),
         ("USER_INPUT", "second request"),
