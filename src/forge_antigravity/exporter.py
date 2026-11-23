@@ -69,7 +69,27 @@ def export_pending_turns(
     history_start = state.history_start_step
     if history_start is None:
         history_start = pending[0].start_step
-        save_state(payload, ExportState(history_start_step=history_start))
+
+    # A turn exported without content must stay without content, including on a
+    # retry and in the history of later turns. Record that before the network
+    # call so a failed export can't lose it.
+    excluded_through = state.content_excluded_through_step
+    send_content = (
+        include_content
+        and not state.corrupted
+        and all(turn.start_step > excluded_through for turn in pending)
+    )
+    if not send_content:
+        excluded_through = max(excluded_through, *(turn.end_step for turn in pending))
+    if state.history_start_step is None or not send_content:
+        save_state(
+            payload,
+            ExportState(
+                last_exported_step=state.last_exported_step,
+                history_start_step=history_start,
+                content_excluded_through_step=excluded_through,
+            ),
+        )
 
     from coreweave.forge.agentlens import tracing
 
@@ -97,7 +117,7 @@ def export_pending_turns(
     for index, turn in enumerate(pending):
         prior_turns = _turn_history_before(
             turns,
-            history_start_step=history_start,
+            history_start_step=max(history_start, excluded_through + 1),
             step_index=turn.start_step,
         )
         forge_turns.append(
@@ -129,7 +149,7 @@ def export_pending_turns(
             agent_name="Antigravity",
             agent_version=__version__,
             model=model,
-            include_content=include_content,
+            include_content=send_content,
             attributes=attributes,
         )
         if not session.force_flush():
@@ -140,7 +160,11 @@ def export_pending_turns(
     last_step = max(turn.end_step for turn in pending)
     save_state(
         payload,
-        ExportState(last_exported_step=last_step, history_start_step=history_start),
+        ExportState(
+            last_exported_step=last_step,
+            history_start_step=history_start,
+            content_excluded_through_step=excluded_through,
+        ),
     )
     return ExportSummary(
         turns=len(pending),
