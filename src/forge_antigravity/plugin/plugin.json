@@ -2,7 +2,7 @@
   "$schema": "https://antigravity.google/schemas/v1/plugin.json",
   "name": "forge-agent-lens",
   "displayName": "CoreWeave Forge Agent Lens",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Export Google Antigravity agent, model, tool, and sub-agent spans through the CoreWeave Forge SDK.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
